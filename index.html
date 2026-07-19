@@ -1,0 +1,1161 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FREKANS — Arkadaşlarınla senkron radyo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0E1116; --panel:#161B22; --panel2:#1B2230; --panel3:#232B3A;
+    --border:#262D3A; --border2:#333C4D;
+    --text:#ECE7DA; --muted:#8B93A3; --muted2:#5C6473;
+    --amber:#FF9F1C; --amber-soft:#FFB454; --amber-dim:rgba(255,159,28,.14);
+    --air:#FF4D4D; --air-glow:rgba(255,77,77,.35);
+    --ok:#3DD68C;
+    --disp:'Bricolage Grotesque',system-ui,sans-serif;
+    --body:'Inter',system-ui,sans-serif;
+    --mono:'Space Mono',ui-monospace,monospace;
+    --r:14px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    background:var(--bg); color:var(--text); font-family:var(--body);
+    -webkit-font-smoothing:antialiased; overflow-x:hidden;
+  }
+  body::before{
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
+    background:
+      radial-gradient(600px 400px at 12% -5%, rgba(255,159,28,.08), transparent 60%),
+      radial-gradient(700px 500px at 100% 110%, rgba(61,110,214,.07), transparent 55%);
+  }
+  button{font-family:inherit; cursor:pointer; border:none; background:none; color:inherit}
+  input,textarea{font-family:inherit}
+  a{color:var(--amber-soft); text-decoration:none}
+  ::selection{background:var(--amber); color:#111}
+  .hide{display:none !important}
+
+  /* ---------- shared bits ---------- */
+  .dot{
+    width:9px; height:9px; border-radius:50%; background:var(--air);
+    box-shadow:0 0 0 0 var(--air-glow); animation:pulse 1.6s infinite;
+  }
+  @keyframes pulse{
+    0%{box-shadow:0 0 0 0 var(--air-glow)}
+    70%{box-shadow:0 0 0 8px rgba(255,77,77,0)}
+    100%{box-shadow:0 0 0 0 rgba(255,77,77,0)}
+  }
+  .eq{display:inline-flex; gap:2px; align-items:flex-end; height:14px}
+  .eq span{width:3px; background:var(--amber); border-radius:2px; animation:eq .9s ease-in-out infinite}
+  .eq span:nth-child(1){animation-delay:0s} .eq span:nth-child(2){animation-delay:.2s}
+  .eq span:nth-child(3){animation-delay:.4s} .eq span:nth-child(4){animation-delay:.15s}
+  @keyframes eq{0%,100%{height:4px}50%{height:14px}}
+  .eq.paused span{animation-play-state:paused; height:4px}
+
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    padding:11px 18px; border-radius:10px; font-weight:600; font-size:14px;
+    background:var(--panel2); color:var(--text); border:1px solid var(--border2);
+    transition:.15s; white-space:nowrap;
+  }
+  .btn:hover{border-color:var(--muted); transform:translateY(-1px)}
+  .btn.primary{background:var(--amber); color:#14110A; border-color:var(--amber)}
+  .btn.primary:hover{background:var(--amber-soft)}
+  .btn.ghost{background:transparent}
+  .btn.sm{padding:7px 12px; font-size:13px; border-radius:8px}
+  .btn:disabled{opacity:.4; cursor:not-allowed; transform:none}
+
+  .field{display:flex; flex-direction:column; gap:6px; margin-bottom:14px}
+  .field label{font-size:12px; color:var(--muted); font-family:var(--mono); letter-spacing:.04em; text-transform:uppercase}
+  .field input, .field textarea{
+    background:var(--bg); border:1px solid var(--border2); color:var(--text);
+    padding:12px 14px; border-radius:10px; font-size:15px; width:100%;
+  }
+  .field input:focus, .field textarea:focus{outline:none; border-color:var(--amber)}
+  .err{color:var(--air); font-size:13px; min-height:18px; margin-top:2px}
+
+  /* ---------- landing ---------- */
+  .wrap{position:relative; z-index:1; max-width:1120px; margin:0 auto; padding:0 22px}
+  header.top{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:22px 22px; max-width:1120px; margin:0 auto; position:relative; z-index:1;
+  }
+  .logo{display:flex; align-items:center; gap:11px}
+  .logo .mark{
+    width:38px; height:38px; border-radius:11px; display:grid; place-items:center;
+    background:linear-gradient(145deg,var(--amber),#C7761A); color:#14110A;
+    font-family:var(--mono); font-weight:700; font-size:19px; box-shadow:0 6px 22px rgba(255,159,28,.28);
+  }
+  .logo b{font-family:var(--disp); font-size:22px; font-weight:800; letter-spacing:-.01em}
+  .logo small{display:block; font-family:var(--mono); font-size:10px; color:var(--muted); letter-spacing:.22em; margin-top:-2px}
+  .nav-user{display:flex; align-items:center; gap:10px; font-size:14px}
+  .nav-user .who{color:var(--muted)}
+  .nav-user .who b{color:var(--text)}
+
+  .hero{padding:48px 0 30px; text-align:left}
+  .hero .kick{
+    font-family:var(--mono); font-size:12px; letter-spacing:.28em; color:var(--amber);
+    text-transform:uppercase; display:flex; align-items:center; gap:10px; margin-bottom:18px;
+  }
+  .hero h1{font-family:var(--disp); font-weight:800; font-size:clamp(38px,6vw,62px); line-height:.98; letter-spacing:-.02em; max-width:16ch}
+  .hero h1 em{font-style:normal; color:var(--amber)}
+  .hero p{color:var(--muted); font-size:18px; margin-top:20px; max-width:52ch; line-height:1.55}
+  .hero .cta{display:flex; gap:12px; margin-top:30px; flex-wrap:wrap}
+
+  .section-head{display:flex; align-items:baseline; justify-content:space-between; margin:44px 0 18px; gap:16px; flex-wrap:wrap}
+  .section-head h2{font-family:var(--disp); font-size:26px; font-weight:600; letter-spacing:-.01em}
+  .section-head .hint{font-family:var(--mono); font-size:12px; color:var(--muted2); letter-spacing:.05em}
+
+  .grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:16px; padding-bottom:70px}
+  .station{
+    background:var(--panel); border:1px solid var(--border); border-radius:var(--r);
+    padding:20px; transition:.18s; position:relative; overflow:hidden; cursor:pointer;
+  }
+  .station::after{
+    content:""; position:absolute; left:0; right:0; bottom:0; height:3px;
+    background:linear-gradient(90deg,var(--amber),transparent); opacity:0; transition:.2s;
+  }
+  .station:hover{transform:translateY(-3px); border-color:var(--border2)}
+  .station:hover::after{opacity:1}
+  .station .freq{font-family:var(--mono); font-size:12px; color:var(--muted2); letter-spacing:.05em; display:flex; align-items:center; justify-content:space-between}
+  .station .live{display:inline-flex; align-items:center; gap:6px; font-size:11px; color:var(--air); font-weight:700; text-transform:uppercase; letter-spacing:.08em}
+  .station .live.off{color:var(--muted2)}
+  .station .live.off .dot{background:var(--muted2); animation:none; box-shadow:none}
+  .station h3{font-family:var(--disp); font-size:21px; font-weight:600; margin:14px 0 6px; letter-spacing:-.01em}
+  .station .desc{color:var(--muted); font-size:14px; line-height:1.5; min-height:42px}
+  .station .meta{display:flex; align-items:center; justify-content:space-between; margin-top:16px; padding-top:14px; border-top:1px solid var(--border); font-size:13px; color:var(--muted)}
+  .station .meta .np{display:flex; align-items:center; gap:8px; overflow:hidden}
+  .station .meta .np span{overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:150px}
+  .empty{grid-column:1/-1; text-align:center; padding:60px 20px; color:var(--muted)}
+  .empty h3{font-family:var(--disp); font-weight:600; font-size:22px; color:var(--text); margin-bottom:8px}
+
+  /* ---------- modal ---------- */
+  .overlay{position:fixed; inset:0; background:rgba(7,9,13,.72); backdrop-filter:blur(6px); z-index:50; display:grid; place-items:center; padding:20px}
+  .modal{background:var(--panel); border:1px solid var(--border2); border-radius:18px; width:100%; max-width:440px; padding:30px; position:relative}
+  .modal h2{font-family:var(--disp); font-size:26px; font-weight:600; letter-spacing:-.01em}
+  .modal .sub{color:var(--muted); margin:8px 0 24px; font-size:15px}
+  .modal .x{position:absolute; top:18px; right:18px; width:34px; height:34px; border-radius:9px; display:grid; place-items:center; color:var(--muted); font-size:20px}
+  .modal .x:hover{background:var(--panel2); color:var(--text)}
+  .modal .switch{margin-top:18px; text-align:center; font-size:14px; color:var(--muted)}
+  .modal .switch button{color:var(--amber-soft); font-weight:600}
+  .tabs{display:flex; gap:6px; background:var(--bg); padding:5px; border-radius:11px; margin-bottom:24px}
+  .tabs button{flex:1; padding:9px; border-radius:8px; font-weight:600; font-size:14px; color:var(--muted)}
+  .tabs button.on{background:var(--panel2); color:var(--text)}
+
+  /* ---------- room ---------- */
+  .room{display:none; position:relative; z-index:1; height:100vh; grid-template-columns:1fr 340px; grid-template-rows:auto 1fr}
+  .room.show{display:grid}
+  .room .console{
+    grid-column:1/-1; display:flex; align-items:center; justify-content:space-between; gap:16px;
+    padding:14px 22px; border-bottom:1px solid var(--border); background:var(--panel);
+  }
+  .console .left{display:flex; align-items:center; gap:16px; min-width:0}
+  .console .onair{
+    display:flex; align-items:center; gap:9px; font-family:var(--mono); font-weight:700;
+    font-size:13px; letter-spacing:.14em; color:var(--air); padding:7px 13px; border-radius:9px;
+    background:rgba(255,77,77,.09); border:1px solid rgba(255,77,77,.25);
+  }
+  .console .onair.off{color:var(--muted2); background:var(--panel2); border-color:var(--border)}
+  .console .onair.off .dot{background:var(--muted2); animation:none; box-shadow:none}
+  .console .title{min-width:0}
+  .console .title h2{font-family:var(--disp); font-size:20px; font-weight:600; letter-spacing:-.01em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .console .title small{font-family:var(--mono); font-size:11px; color:var(--muted); letter-spacing:.05em}
+  .console .right{display:flex; align-items:center; gap:12px}
+  .listeners{display:flex; align-items:center; gap:7px; font-family:var(--mono); font-size:13px; color:var(--muted)}
+  .listeners b{color:var(--text)}
+  .role-badge{font-family:var(--mono); font-size:11px; letter-spacing:.08em; padding:5px 10px; border-radius:7px; text-transform:uppercase}
+  .role-badge.dj{background:var(--amber-dim); color:var(--amber-soft); border:1px solid rgba(255,159,28,.3)}
+  .role-badge.listener{background:var(--panel2); color:var(--muted); border:1px solid var(--border)}
+
+  .stage{padding:22px; overflow-y:auto}
+  .player-wrap{background:#000; border-radius:var(--r); overflow:hidden; border:1px solid var(--border); position:relative; aspect-ratio:16/9}
+  #ytplayer{width:100%; height:100%}
+  .player-cover{position:absolute; inset:0; display:grid; place-items:center; background:linear-gradient(160deg,#12161D,#0A0D12); text-align:center; padding:30px}
+  .player-cover .big{font-family:var(--disp); font-size:26px; font-weight:600; margin:16px 0 8px}
+  .player-cover p{color:var(--muted); margin-bottom:22px; max-width:34ch}
+
+  .dj-bar{display:flex; gap:10px; margin-top:16px; flex-wrap:wrap; align-items:center}
+  .dj-bar .add{flex:1; min-width:220px; display:flex; gap:8px}
+  .dj-bar .add input{flex:1; background:var(--bg); border:1px solid var(--border2); color:var(--text); padding:11px 14px; border-radius:10px; font-size:14px}
+  .dj-bar .add input:focus{outline:none; border-color:var(--amber)}
+  .dj-bar .add{position:relative}
+  .search-results{
+    position:absolute; top:calc(100% + 8px); left:0; right:0; z-index:20;
+    background:var(--panel); border:1px solid var(--border2); border-radius:12px;
+    box-shadow:0 16px 44px rgba(0,0,0,.5); max-height:400px; overflow-y:auto; padding:6px;
+  }
+  .search-results .sr-item{display:flex; gap:11px; align-items:center; padding:9px; border-radius:9px; cursor:default}
+  .search-results .sr-item:hover{background:var(--panel2)}
+  .search-results .sr-item img{width:64px; height:40px; object-fit:cover; border-radius:6px; flex-shrink:0; background:var(--panel2)}
+  .search-results .sr-item .sr-meta{min-width:0; flex:1}
+  .search-results .sr-item .sr-t{font-size:13px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .search-results .sr-item .sr-c{font-size:11px; color:var(--muted2); font-family:var(--mono); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .search-results .sr-item .sr-act{display:flex; gap:5px; flex-shrink:0}
+  .search-results .sr-loading, .search-results .sr-msg{padding:16px; text-align:center; color:var(--muted); font-size:13px}
+
+  .lists{display:grid; grid-template-columns:1fr; gap:22px; margin-top:24px}
+  .card{background:var(--panel); border:1px solid var(--border); border-radius:var(--r); overflow:hidden}
+  .card .card-h{display:flex; align-items:center; justify-content:space-between; padding:15px 18px; border-bottom:1px solid var(--border)}
+  .card .card-h h3{font-family:var(--disp); font-size:16px; font-weight:600; display:flex; align-items:center; gap:9px}
+  .card .card-h .count{font-family:var(--mono); font-size:12px; color:var(--muted2)}
+  .queue{list-style:none; max-height:340px; overflow-y:auto}
+  .queue li{display:flex; align-items:center; gap:12px; padding:11px 18px; border-bottom:1px solid var(--border); font-size:14px}
+  .queue li:last-child{border-bottom:none}
+  .queue li.now{background:var(--amber-dim)}
+  .queue li img{width:52px; height:34px; object-fit:cover; border-radius:6px; flex-shrink:0; background:var(--panel2)}
+  .queue li .qmeta{min-width:0; flex:1}
+  .queue li .qmeta .t{white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-weight:500}
+  .queue li .qmeta .b{font-size:12px; color:var(--muted2); font-family:var(--mono); margin-top:2px}
+  .queue li .qact{display:flex; gap:5px; flex-shrink:0}
+  .icon-btn{width:30px; height:30px; border-radius:8px; display:grid; place-items:center; color:var(--muted); border:1px solid transparent}
+  .icon-btn:hover{background:var(--panel2); color:var(--text); border-color:var(--border)}
+  .icon-btn.play:hover{color:var(--amber)}
+  .list-empty{padding:26px 18px; color:var(--muted2); font-size:14px; text-align:center}
+
+  .pl-row{display:flex; gap:10px; padding:14px 18px; flex-wrap:wrap; align-items:center}
+  .pl-select{flex:1; min-width:160px; background:var(--bg); border:1px solid var(--border2); color:var(--text); padding:10px 12px; border-radius:9px; font-size:14px}
+
+  /* chat */
+  .chat{grid-row:2; grid-column:2; border-left:1px solid var(--border); background:var(--panel); display:flex; flex-direction:column; min-height:0}
+  .chat .chat-h{padding:15px 18px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:9px}
+  .chat .chat-h h3{font-family:var(--disp); font-size:16px; font-weight:600}
+  .chat-msgs{flex:1; overflow-y:auto; padding:16px 18px; display:flex; flex-direction:column; gap:14px}
+  .msg .m-top{display:flex; align-items:baseline; gap:8px; margin-bottom:3px}
+  .msg .m-name{font-weight:600; font-size:13px; color:var(--amber-soft)}
+  .msg .m-name.me{color:var(--ok)}
+  .msg .m-time{font-family:var(--mono); font-size:10px; color:var(--muted2)}
+  .msg .m-body{font-size:14px; color:var(--text); line-height:1.5; word-break:break-word}
+  .msg.sys{text-align:center; color:var(--muted2); font-size:12px; font-family:var(--mono)}
+  .chat-in{padding:14px; border-top:1px solid var(--border); display:flex; gap:8px}
+  .chat-in input{flex:1; background:var(--bg); border:1px solid var(--border2); color:var(--text); padding:11px 13px; border-radius:10px; font-size:14px}
+  .chat-in input:focus{outline:none; border-color:var(--amber)}
+  .chat-in .send{width:44px; padding:0; background:var(--amber); color:#14110A; border-radius:10px; display:grid; place-items:center}
+
+  .stage::-webkit-scrollbar,.chat-msgs::-webkit-scrollbar,.queue::-webkit-scrollbar{width:8px}
+  .stage::-webkit-scrollbar-thumb,.chat-msgs::-webkit-scrollbar-thumb,.queue::-webkit-scrollbar-thumb{background:var(--border2); border-radius:4px}
+
+  .toast{position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px); background:var(--panel3); border:1px solid var(--border2); color:var(--text); padding:13px 20px; border-radius:11px; font-size:14px; z-index:100; opacity:0; transition:.25s; box-shadow:0 12px 40px rgba(0,0,0,.4)}
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0)}
+
+  @media(max-width:900px){
+    .room.show{grid-template-columns:1fr; grid-template-rows:auto auto 1fr}
+    .chat{grid-row:3; grid-column:1; border-left:none; border-top:1px solid var(--border); max-height:44vh}
+    .stage{grid-column:1}
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ LANDING ============ -->
+<div id="landing">
+  <header class="top">
+    <div class="logo">
+      <div class="mark">FR</div>
+      <div><b>FREKANS</b><small>SENKRON RADYO</small></div>
+    </div>
+    <div class="nav-user" id="navUser">
+      <button class="btn ghost sm" id="btnLogin">Giriş yap</button>
+      <button class="btn primary sm" id="btnRegister">Topluluk kur</button>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <section class="hero">
+      <div class="kick"><span class="dot"></span> CANLI YAYINDA</div>
+      <h1>Aynı şarkı. Aynı saniye. <em>Herkes birlikte.</em></h1>
+      <p>Kendi topluluğunu kur, arkadaşlarını davet et ve YouTube'dan çaldığın müziği herkesle senkron dinle. Sağda sohbet, altta sıradaki şarkılar — tıpkı bir radyo istasyonu gibi.</p>
+      <div class="cta">
+        <button class="btn primary" id="heroCreate">Kendi istasyonunu kur</button>
+        <button class="btn ghost" id="heroBrowse">Yayınlara göz at</button>
+      </div>
+    </section>
+
+    <div class="section-head">
+      <h2>Topluluklar</h2>
+      <span class="hint" id="commHint">yükleniyor…</span>
+    </div>
+    <div class="grid" id="commGrid"></div>
+  </div>
+</div>
+
+<!-- ============ AUTH MODAL ============ -->
+<div class="overlay hide" id="authModal">
+  <div class="modal">
+    <button class="x" data-close>&times;</button>
+    <div class="tabs">
+      <button id="tabLogin" class="on">Giriş yap</button>
+      <button id="tabRegister">Kayıt ol</button>
+    </div>
+
+    <div id="formLogin">
+      <h2>Tekrar hoş geldin</h2>
+      <p class="sub">İstasyonunu yönetmek için giriş yap.</p>
+      <div class="field"><label>Kullanıcı adı veya e-posta</label><input id="li_id" autocomplete="username"></div>
+      <div class="field"><label>Şifre</label><input id="li_pw" type="password" autocomplete="current-password"></div>
+      <div class="err" id="li_err"></div>
+      <button class="btn primary" id="doLogin" style="width:100%">Giriş yap</button>
+    </div>
+
+    <div id="formRegister" class="hide">
+      <h2>Topluluğunu kur</h2>
+      <p class="sub">Yayın yapmak için bir hesap oluştur.</p>
+      <div class="field"><label>Kullanıcı adı</label><input id="rg_user" autocomplete="username"></div>
+      <div class="field"><label>E-posta</label><input id="rg_mail" type="email" autocomplete="email"></div>
+      <div class="field"><label>Şifre</label><input id="rg_pw" type="password" autocomplete="new-password"></div>
+      <div class="err" id="rg_err"></div>
+      <button class="btn primary" id="doRegister" style="width:100%">Hesabı oluştur</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ CREATE COMMUNITY MODAL ============ -->
+<div class="overlay hide" id="createModal">
+  <div class="modal">
+    <button class="x" data-close>&times;</button>
+    <h2>Yeni istasyon</h2>
+    <p class="sub">Topluluğun herkese açık listede görünür, sadece sen yayın yaparsın.</p>
+    <div class="field"><label>İstasyon adı</label><input id="cm_name" placeholder="ör. Gece Vardiyası FM"></div>
+    <div class="field"><label>Kısa açıklama</label><input id="cm_desc" placeholder="ör. Geç saat lo-fi ve indie"></div>
+    <div class="err" id="cm_err"></div>
+    <button class="btn primary" id="doCreate" style="width:100%">Yayına başla</button>
+  </div>
+</div>
+
+<!-- ============ JOIN (LISTENER) MODAL ============ -->
+<div class="overlay hide" id="joinModal">
+  <div class="modal">
+    <button class="x" data-close>&times;</button>
+    <h2 id="jm_title">Yayına katıl</h2>
+    <p class="sub" id="jm_sub">Sohbette görünecek bir isim seç. Kayıt gerekmez.</p>
+    <div class="field"><label>Görünen ad</label><input id="jm_name" placeholder="ör. Yusuf" maxlength="24"></div>
+    <div class="err" id="jm_err"></div>
+    <button class="btn primary" id="doJoin" style="width:100%">Dinlemeye başla</button>
+  </div>
+</div>
+
+<!-- ============ ROOM ============ -->
+<div class="room" id="room">
+  <div class="console">
+    <div class="left">
+      <div class="onair off" id="onair"><span class="dot"></span> <span id="onairTxt">YAYIN KAPALI</span></div>
+      <div class="title">
+        <h2 id="roomName">İstasyon</h2>
+        <small id="roomNp">boşta</small>
+      </div>
+    </div>
+    <div class="right">
+      <div class="listeners" title="Dinleyen kişi"><span class="eq paused" id="eq"><span></span><span></span><span></span><span></span></span> <b id="lisCount">0</b> dinleyici</div>
+      <span class="role-badge listener" id="roleBadge">DİNLEYİCİ</span>
+      <button class="btn ghost sm" id="btnInvite">Davet et</button>
+      <button class="btn ghost sm" id="btnLeave">Çık</button>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div class="player-wrap">
+      <div id="ytplayer"></div>
+      <div class="player-cover" id="playerCover">
+        <div class="eq paused" style="height:26px"><span style="height:8px"></span><span style="height:8px"></span><span style="height:8px"></span><span style="height:8px"></span></div>
+        <div class="big" id="coverTitle">Yayın henüz başlamadı</div>
+        <p id="coverText">DJ bir şarkı açtığında burada göreceksin.</p>
+        <button class="btn primary hide" id="tuneIn">🔊 Sesi aç ve dinle</button>
+      </div>
+    </div>
+
+    <!-- DJ controls -->
+    <div class="dj-bar hide" id="djBar">
+      <div class="add">
+        <input id="dj_url" placeholder="Şarkı ara ya da YouTube linki yapıştır…" autocomplete="off">
+        <button class="btn" id="dj_add">Ara / Ekle</button>
+        <div class="search-results hide" id="searchResults"></div>
+      </div>
+      <button class="btn sm" id="dj_playpause">⏸ Duraklat</button>
+      <button class="btn sm" id="dj_skip">⏭ Geç</button>
+    </div>
+
+    <div class="lists">
+      <!-- queue -->
+      <div class="card">
+        <div class="card-h">
+          <h3>▸ Sıradaki şarkılar</h3>
+          <span class="count" id="queueCount">0 parça</span>
+        </div>
+        <ul class="queue" id="queueList"></ul>
+      </div>
+
+      <!-- playlists -->
+      <div class="card">
+        <div class="card-h">
+          <h3>♫ Kayıtlı listeler</h3>
+          <button class="btn sm hide" id="pl_save">Sırayı kaydet</button>
+        </div>
+        <div class="pl-row">
+          <select class="pl-select" id="pl_select"><option value="">Bir liste seç…</option></select>
+          <button class="btn sm" id="pl_load">Yükle</button>
+          <button class="btn sm ghost hide" id="pl_del">Sil</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- chat -->
+  <aside class="chat">
+    <div class="chat-h"><span class="dot" style="animation:none;background:var(--ok);box-shadow:none"></span><h3>Sohbet</h3></div>
+    <div class="chat-msgs" id="chatMsgs"></div>
+    <div class="chat-in">
+      <input id="chatInput" placeholder="Bir şeyler yaz…" maxlength="300">
+      <button class="send" id="chatSend">➤</button>
+    </div>
+  </aside>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- ============ FIREBASE ============ -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<script>
+/* ================================================================
+   1) FIREBASE CONFIG  —  BURAYI KENDİ PROJENLE DOLDUR
+   Firebase Console > Proje ayarları > Web uygulaması config'i
+   Ayrıca: Authentication > Sign-in method > Email/Password AÇ
+   ================================================================ */
+const firebaseConfig = {
+  apiKey: "AIzaSyCjDAlvMEOC_m6Ikk4hZsAJHEHHdPqobeY",
+  authDomain: "istasyon-fdafa.firebaseapp.com",
+  projectId: "istasyon-fdafa",
+  storageBucket: "istasyon-fdafa.firebasestorage.app",
+  messagingSenderId: "47242943352",
+  appId: "1:47242943352:web:3dc3f035ead638fe73868d",
+  measurementId: "G-9N04W3VZFY"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db   = firebase.firestore();
+const FV   = firebase.firestore.FieldValue;
+
+/* YouTube arama için Data API v3 anahtarı.
+   Google Cloud Console > APIs & Services > "YouTube Data API v3" etkinleştir >
+   Credentials > API key oluştur. (İstersen HTTP referrer kısıtı ekle.)
+   Boş bırakırsan arama kapalı olur, link yapıştırma çalışmaya devam eder. */
+const YT_API_KEY = "AIzaSyAxu6NqaevLxfLxESUSyTkLYcUp0S489ZA";
+
+/* ================================================================
+   2) DURUM
+   ================================================================ */
+const state = {
+  user:null,            // firebase auth user (DJ/owner)
+  profile:null,         // {username,email}
+  displayName:null,     // listener görünen ad
+  sessionId: 'sx_' + Math.random().toString(36).slice(2),
+  community:null,       // aktif topluluk {id, data...}
+  isDJ:false,
+  player:null,          // YT player
+  playerReady:false,
+  tunedIn:false,        // ses açıldı mı
+  currentVideoId:null,
+  unsub:{ comms:null, room:null, queue:null, chat:null, presence:null, playlists:null },
+  queue:[],
+  playlists:[],
+  heartbeat:null,
+  driftTimer:null,
+  syncGuard:false
+};
+
+/* ================================================================
+   3) YARDIMCILAR
+   ================================================================ */
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+function toast(m){ const t=$('#toast'); t.textContent=m; t.classList.add('show'); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),2600); }
+function esc(s){ return (s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function timeStr(ts){ if(!ts) return ''; const d=ts.toDate?ts.toDate():new Date(ts); return d.toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'}); }
+
+function parseVideoId(input){
+  input = (input||'').trim();
+  if(!input) return null;
+  if(/^[a-zA-Z0-9_-]{11}$/.test(input)) return input;
+  try{
+    const u = new URL(input);
+    if(u.hostname.includes('youtu.be')) return u.pathname.slice(1,12);
+    if(u.searchParams.get('v')) return u.searchParams.get('v');
+    const m = u.pathname.match(/\/(embed|shorts)\/([a-zA-Z0-9_-]{11})/);
+    if(m) return m[2];
+  }catch(e){}
+  const m2 = input.match(/([a-zA-Z0-9_-]{11})/);
+  return m2 ? m2[1] : null;
+}
+// YouTube başlık + thumbnail (API key gerektirmez)
+async function fetchMeta(videoId){
+  try{
+    const r = await fetch(`https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`);
+    if(!r.ok) throw 0;
+    const j = await r.json();
+    return { title:j.title, thumb:`https://i.ytimg.com/vi/${videoId}/mqdefault.jpg`, author:j.author_name||'' };
+  }catch(e){
+    return { title:'YouTube videosu', thumb:`https://i.ytimg.com/vi/${videoId}/mqdefault.jpg`, author:'' };
+  }
+}
+
+/* ================================================================
+   4) MODAL & NAV
+   ================================================================ */
+function openM(id){ $('#'+id).classList.remove('hide'); }
+function closeM(id){ $('#'+id).classList.add('hide'); }
+$$('[data-close]').forEach(b=>b.onclick=()=>b.closest('.overlay').classList.add('hide'));
+$$('.overlay').forEach(o=>o.addEventListener('click',e=>{ if(e.target===o) o.classList.add('hide'); }));
+
+$('#btnLogin').onclick = ()=>{ showAuthTab('login'); openM('authModal'); };
+$('#btnRegister').onclick = ()=>{ showAuthTab('register'); openM('authModal'); };
+$('#tabLogin').onclick = ()=>showAuthTab('login');
+$('#tabRegister').onclick = ()=>showAuthTab('register');
+function showAuthTab(t){
+  const lg = t==='login';
+  $('#tabLogin').classList.toggle('on',lg); $('#tabRegister').classList.toggle('on',!lg);
+  $('#formLogin').classList.toggle('hide',!lg); $('#formRegister').classList.toggle('hide',lg);
+}
+$('#heroBrowse').onclick = ()=> $('#commGrid').scrollIntoView({behavior:'smooth'});
+$('#heroCreate').onclick = ()=>{ if(state.user) openM('createModal'); else { showAuthTab('register'); openM('authModal'); } };
+
+/* ================================================================
+   5) AUTH (owner/DJ) — kullanıcı adı → e-posta eşlemesi
+   ================================================================ */
+$('#doRegister').onclick = async ()=>{
+  const user=$('#rg_user').value.trim().toLowerCase();
+  const mail=$('#rg_mail').value.trim();
+  const pw=$('#rg_pw').value;
+  const err=$('#rg_err'); err.textContent='';
+  if(!/^[a-z0-9_]{3,20}$/.test(user)) return err.textContent='Kullanıcı adı 3-20 karakter, harf/rakam/alt çizgi olmalı.';
+  if(!/^\S+@\S+\.\S+$/.test(mail)) return err.textContent='Geçerli bir e-posta gir.';
+  if(pw.length<6) return err.textContent='Şifre en az 6 karakter olmalı.';
+  const btn=$('#doRegister'); btn.disabled=true; btn.textContent='Oluşturuluyor…';
+  try{
+    const uref = db.collection('usernames').doc(user);
+    if((await uref.get()).exists) throw {message:'Bu kullanıcı adı alınmış.'};
+    const cred = await auth.createUserWithEmailAndPassword(mail,pw);
+    await cred.user.updateProfile({displayName:user});
+    await db.collection('users').doc(cred.user.uid).set({username:user,email:mail,createdAt:FV.serverTimestamp()});
+    await uref.set({email:mail,uid:cred.user.uid});
+    closeM('authModal');
+    toast('Hoş geldin, @'+user);
+    openM('createModal');
+  }catch(e){
+    err.textContent = mapAuthErr(e);
+  }finally{ btn.disabled=false; btn.textContent='Hesabı oluştur'; }
+};
+
+$('#doLogin').onclick = async ()=>{
+  let id=$('#li_id').value.trim(); const pw=$('#li_pw').value;
+  const err=$('#li_err'); err.textContent='';
+  if(!id||!pw) return err.textContent='Bilgileri gir.';
+  const btn=$('#doLogin'); btn.disabled=true; btn.textContent='Giriş yapılıyor…';
+  try{
+    let email=id;
+    if(!id.includes('@')){
+      const snap = await db.collection('usernames').doc(id.toLowerCase()).get();
+      if(!snap.exists) throw {message:'Böyle bir kullanıcı yok.'};
+      email = snap.data().email;
+    }
+    await auth.signInWithEmailAndPassword(email,pw);
+    closeM('authModal');
+  }catch(e){ err.textContent = mapAuthErr(e); }
+  finally{ btn.disabled=false; btn.textContent='Giriş yap'; }
+};
+function mapAuthErr(e){
+  const c=e.code||'';
+  if(c.includes('email-already-in-use')) return 'Bu e-posta zaten kayıtlı.';
+  if(c.includes('wrong-password')||c.includes('invalid-credential')) return 'Şifre veya kullanıcı hatalı.';
+  if(c.includes('user-not-found')) return 'Böyle bir kullanıcı yok.';
+  if(c.includes('too-many-requests')) return 'Çok fazla deneme. Biraz bekle.';
+  return e.message || 'Bir hata oldu.';
+}
+
+auth.onAuthStateChanged(async u=>{
+  state.user=u;
+  if(u){
+    const snap=await db.collection('users').doc(u.uid).get();
+    state.profile = snap.exists?snap.data():{username:u.displayName||'dj',email:u.email};
+    renderNav();
+  }else{
+    state.profile=null; renderNav();
+  }
+});
+function renderNav(){
+  const el=$('#navUser');
+  if(state.user){
+    el.innerHTML = `<span class="who">@<b>${esc(state.profile?.username||'dj')}</b></span>
+      <button class="btn primary sm" id="nvCreate">+ İstasyon</button>
+      <button class="btn ghost sm" id="nvOut">Çıkış</button>`;
+    $('#nvCreate').onclick=()=>openM('createModal');
+    $('#nvOut').onclick=async ()=>{ await auth.signOut(); toast('Çıkış yapıldı'); };
+  }else{
+    el.innerHTML = `<button class="btn ghost sm" id="btnLogin2">Giriş yap</button>
+      <button class="btn primary sm" id="btnReg2">Topluluk kur</button>`;
+    $('#btnLogin2').onclick=()=>{ showAuthTab('login'); openM('authModal'); };
+    $('#btnReg2').onclick=()=>{ showAuthTab('register'); openM('authModal'); };
+  }
+}
+
+/* ================================================================
+   6) TOPLULUK OLUŞTUR
+   ================================================================ */
+$('#doCreate').onclick = async ()=>{
+  if(!state.user) return;
+  const name=$('#cm_name').value.trim(), desc=$('#cm_desc').value.trim();
+  const err=$('#cm_err'); err.textContent='';
+  if(name.length<2) return err.textContent='Bir istasyon adı gir.';
+  const btn=$('#doCreate'); btn.disabled=true; btn.textContent='Kuruluyor…';
+  try{
+    const ref = await db.collection('communities').add({
+      name, desc,
+      ownerUid: state.user.uid,
+      ownerName: state.profile?.username || 'dj',
+      createdAt: FV.serverTimestamp(),
+      freq: (87 + Math.random()*20).toFixed(1),   // dekoratif "frekans"
+      nowPlaying:null, isLive:false
+    });
+    closeM('createModal');
+    $('#cm_name').value=''; $('#cm_desc').value='';
+    toast('İstasyon yayında!');
+    enterRoom(ref.id);
+  }catch(e){ err.textContent='Oluşturulamadı: '+(e.message||''); }
+  finally{ btn.disabled=false; btn.textContent='Yayına başla'; }
+};
+
+/* ================================================================
+   7) TOPLULUK LİSTESİ (canlı)
+   ================================================================ */
+function watchCommunities(){
+  if(state.unsub.comms) return;
+  state.unsub.comms = db.collection('communities').orderBy('createdAt','desc').limit(60)
+    .onSnapshot(snap=>{
+      const grid=$('#commGrid'); const hint=$('#commHint');
+      hint.textContent = snap.size + ' istasyon';
+      if(snap.empty){
+        grid.innerHTML = `<div class="empty"><h3>Henüz istasyon yok</h3><p>İlk yayını sen başlat — bir topluluk kur ve arkadaşlarını çağır.</p></div>`;
+        return;
+      }
+      grid.innerHTML='';
+      snap.forEach(doc=>{
+        const c=doc.data();
+        const live = !!c.isLive && !!c.nowPlaying;
+        const np = c.nowPlaying?.title || 'boşta';
+        const card=document.createElement('div');
+        card.className='station';
+        card.innerHTML=`
+          <div class="freq"><span>FM ${c.freq||'—'}</span>
+            <span class="live ${live?'':'off'}"><span class="dot"></span>${live?'CANLI':'KAPALI'}</span></div>
+          <h3>${esc(c.name)}</h3>
+          <div class="desc">${esc(c.desc||'Açıklama yok.')}</div>
+          <div class="meta">
+            <div class="np">${live?'▸':'⏸'} <span>${esc(np)}</span></div>
+            <div>@${esc(c.ownerName||'dj')}</div>
+          </div>`;
+        card.onclick=()=>enterRoom(doc.id);
+        grid.appendChild(card);
+      });
+    }, e=> $('#commHint').textContent='liste yüklenemedi (config?)');
+}
+
+/* ================================================================
+   8) ODAYA GİRİŞ
+   ================================================================ */
+async function enterRoom(id){
+  // temizle
+  detachRoom();
+  const snap = await db.collection('communities').doc(id).get();
+  if(!snap.exists){ toast('İstasyon bulunamadı'); history.replaceState(null,'',location.pathname); return; }
+  const c = snap.data();
+  state.community = {id, ...c};
+  state.isDJ = !!(state.user && state.user.uid===c.ownerUid);
+
+  // URL güncelle (davet için)
+  history.replaceState(null,'','?c='+id);
+
+  // Dinleyici ismi gerekiyorsa sor (DJ'in ismi zaten var)
+  if(state.isDJ){
+    state.displayName = '@'+(state.profile?.username||'dj');
+    launchRoom();
+  }else{
+    const saved = localStorage.getItem('frekans_name');
+    $('#jm_title').textContent = c.name;
+    $('#jm_sub').textContent = 'Sohbette görünecek bir isim seç. Kayıt gerekmez.';
+    $('#jm_name').value = saved||'';
+    $('#jm_err').textContent='';
+    openM('joinModal');
+    $('#doJoin').onclick = ()=>{
+      const nm=$('#jm_name').value.trim();
+      if(nm.length<2){ $('#jm_err').textContent='Bir isim gir.'; return; }
+      localStorage.setItem('frekans_name',nm);
+      state.displayName=nm;
+      closeM('joinModal');
+      launchRoom();
+    };
+  }
+}
+
+function launchRoom(){
+  $('#landing').style.display='none';
+  $('#room').classList.add('show');
+  $('#roomName').textContent = state.community.name;
+  $('#roleBadge').textContent = state.isDJ?'DJ':'DİNLEYİCİ';
+  $('#roleBadge').className = 'role-badge '+(state.isDJ?'dj':'listener');
+  $('#djBar').classList.toggle('hide', !state.isDJ);
+  $('#pl_save').classList.toggle('hide', !state.isDJ);
+  $('#pl_del').classList.toggle('hide', !state.isDJ);
+  // dinleyicide "sesi aç" butonu; DJ'de gizli (kendi çalıyor)
+  $('#tuneIn').classList.toggle('hide', state.isDJ);
+
+  ensurePlayer();
+  watchRoom();
+  watchQueue();
+  watchChat();
+  watchPlaylists();
+  startPresence();
+}
+
+function detachRoom(){
+  Object.keys(state.unsub).forEach(k=>{ if(k!=='comms' && state.unsub[k]){ state.unsub[k](); state.unsub[k]=null; }});
+  if(state.heartbeat){ clearInterval(state.heartbeat); state.heartbeat=null; }
+  if(state.driftTimer){ clearInterval(state.driftTimer); state.driftTimer=null; }
+}
+
+$('#btnLeave').onclick = async ()=>{
+  // presence temizle
+  if(state.community && state.displayName){
+    try{ await db.collection('communities').doc(state.community.id).collection('presence').doc(state.sessionId).delete(); }catch(e){}
+  }
+  detachRoom();
+  state.community=null; state.isDJ=false; state.tunedIn=false; state.currentVideoId=null;
+  if(state.player){ try{state.player.stopVideo();}catch(e){} }
+  $('#room').classList.remove('show');
+  $('#landing').style.display='';
+  history.replaceState(null,'',location.pathname);
+};
+
+$('#btnInvite').onclick = ()=>{
+  const url = location.origin+location.pathname+'?c='+state.community.id;
+  navigator.clipboard?.writeText(url).then(()=>toast('Davet linki kopyalandı!'),()=>prompt('Davet linki:',url));
+};
+
+/* ================================================================
+   9) YOUTUBE PLAYER + SENKRON
+   ================================================================ */
+let ytApiReady=false;
+window.onYouTubeIframeAPIReady = ()=>{ ytApiReady=true; };
+(function loadYT(){ const s=document.createElement('script'); s.src='https://www.youtube.com/iframe_api'; document.head.appendChild(s); })();
+
+function ensurePlayer(){
+  if(state.player){ return; }
+  const build = ()=>{
+    state.player = new YT.Player('ytplayer',{
+      width:'100%', height:'100%',
+      playerVars:{ autoplay:0, controls: state.isDJ?1:0, disablekb: state.isDJ?0:1, rel:0, modestbranding:1, playsinline:1 },
+      events:{
+        onReady:()=>{ state.playerReady=true; if(state.isDJ) state.player.mute(); /* DJ ilk anda mute; kendi açar */ applyIncoming(); },
+        onStateChange:onPlayerState
+      }
+    });
+  };
+  if(ytApiReady) build();
+  else { const iv=setInterval(()=>{ if(ytApiReady){ clearInterval(iv); build(); } },150); }
+}
+
+// DJ'in player olayları → Firestore'a yaz
+function onPlayerState(e){
+  if(!state.isDJ) return;
+  const YTS=YT.PlayerState;
+  if(e.data===YTS.ENDED){ playNext(); return; }
+  if(e.data===YTS.PLAYING){ djUnmuteOnce(); }
+  if(e.data===YTS.PLAYING || e.data===YTS.PAUSED){
+    broadcastNow(e.data===YTS.PLAYING);
+  }
+}
+$('#dj_playpause').onclick = ()=>{
+  if(!state.playerReady) return;
+  const st=state.player.getPlayerState();
+  if(st===YT.PlayerState.PLAYING){ state.player.pauseVideo(); }
+  else{ state.player.playVideo(); }
+};
+$('#dj_skip').onclick = ()=> playNext();
+
+// DJ: geçerli player durumunu topluluk dokümanına yaz
+function broadcastNow(isPlaying){
+  if(!state.isDJ || !state.currentVideoId) return;
+  const pos = state.player.getCurrentTime()||0;
+  const meta = state._curMeta || {};
+  db.collection('communities').doc(state.community.id).update({
+    isLive:true,
+    nowPlaying:{
+      videoId: state.currentVideoId,
+      title: meta.title||'',
+      thumb: meta.thumb||'',
+      position: pos,
+      isPlaying,
+      updatedAt: Date.now()
+    }
+  });
+}
+
+// DJ: sıradaki şarkıya geç
+async function playNext(){
+  if(!state.isDJ) return;
+  const q = state.queue;
+  if(!q.length){
+    state.currentVideoId=null; state._curMeta=null;
+    await db.collection('communities').doc(state.community.id).update({isLive:false, nowPlaying:null});
+    try{ state.player.stopVideo(); }catch(e){}
+    return;
+  }
+  const next = q[0];
+  await db.collection('communities').doc(state.community.id).collection('queue').doc(next.id).delete();
+  playVideo(next.videoId,{title:next.title,thumb:next.thumb});
+}
+
+// DJ: belirli videoyu çal + yayınla
+function playVideo(videoId, meta){
+  state.currentVideoId = videoId;
+  state._curMeta = meta||{};
+  if(state.playerReady){
+    state.player.loadVideoById(videoId);
+    if(state.tunedIn===false && state.isDJ){ /* DJ sesi açana kadar mute kalır */ }
+  }
+  broadcastNow(true);
+}
+
+// Odayı izle (herkes) → gelen yayını uygula
+function watchRoom(){
+  state.unsub.room = db.collection('communities').doc(state.community.id)
+    .onSnapshot(doc=>{
+      if(!doc.exists){ toast('İstasyon kapandı'); $('#btnLeave').click(); return; }
+      state.community = {id:doc.id, ...doc.data()};
+      applyIncoming();
+    });
+}
+
+// gelen nowPlaying'i player'a uygula (dinleyici = takipçi, DJ = kaynak)
+function applyIncoming(){
+  const np = state.community?.nowPlaying;
+  const live = !!state.community?.isLive && !!np;
+  // console durumu
+  $('#onair').classList.toggle('off', !live);
+  $('#onairTxt').textContent = live?'YAYINDA':'YAYIN KAPALI';
+  $('#roomNp').textContent = np?.title || 'boşta';
+  $('#eq').classList.toggle('paused', !(np&&np.isPlaying));
+  if(state.isDJ){
+    $('#dj_playpause').textContent = (np&&np.isPlaying)?'⏸ Duraklat':'▶ Devam et';
+  }
+
+  if(!live){
+    $('#playerCover').style.display='grid';
+    $('#coverTitle').textContent='Yayın henüz başlamadı';
+    $('#coverText').textContent = state.isDJ?'Aşağıdan bir şarkı ekleyip çalmaya başla.':'DJ bir şarkı açtığında burada göreceksin.';
+    $('#tuneIn').classList.add('hide');
+    return;
+  }
+
+  // canlı: kapağı kaldır (dinleyici ses açtıysa) ya da tune-in göster
+  if(!state.isDJ && !state.tunedIn){
+    $('#playerCover').style.display='grid';
+    $('#coverTitle').textContent=np.title||'Yayın başladı';
+    $('#coverText').textContent='DJ şu an yayında. Sesi açmak için tıkla.';
+    $('#tuneIn').classList.remove('hide');
+    return;
+  }
+  $('#playerCover').style.display='none';
+
+  if(!state.playerReady) return;
+
+  // video değiştiyse yükle
+  if(np.videoId !== state.currentVideoId){
+    state.currentVideoId = np.videoId;
+    state._curMeta = {title:np.title, thumb:np.thumb};
+    state.syncGuard=true;
+    state.player.loadVideoById({videoId:np.videoId, startSeconds: targetPos(np)});
+    setTimeout(()=>{ state.syncGuard=false; syncToBroadcast(np,true); }, 800);
+    return;
+  }
+  syncToBroadcast(np,false);
+}
+
+function targetPos(np){
+  if(!np) return 0;
+  if(!np.isPlaying) return np.position||0;
+  const elapsed = (Date.now() - (np.updatedAt||Date.now()))/1000;
+  return Math.max(0,(np.position||0) + elapsed);
+}
+
+// dinleyici player'ını yayına hizala
+function syncToBroadcast(np, force){
+  if(state.isDJ) return;            // DJ kendisi kaynak, hizalamaz
+  if(!state.playerReady || !np) return;
+  const want = targetPos(np);
+  const have = state.player.getCurrentTime()||0;
+  if(np.isPlaying){
+    if(force || Math.abs(have-want) > 1.8){ state.player.seekTo(want,true); }
+    if(state.player.getPlayerState()!==YT.PlayerState.PLAYING){ state.player.playVideo(); }
+  }else{
+    if(state.player.getPlayerState()===YT.PlayerState.PLAYING){ state.player.pauseVideo(); }
+    if(Math.abs(have-(np.position||0))>1.5){ state.player.seekTo(np.position||0,true); }
+  }
+}
+
+// dinleyici: periyodik drift düzeltme
+function startDriftLoop(){
+  if(state.driftTimer||state.isDJ) return;
+  state.driftTimer = setInterval(()=>{
+    if(state.tunedIn && state.community?.nowPlaying && !state.syncGuard){
+      syncToBroadcast(state.community.nowPlaying,false);
+    }
+  }, 4000);
+}
+
+// "Sesi aç" (dinleyici gesture'ı) / DJ için de sesi açar
+$('#tuneIn').onclick = ()=>{
+  state.tunedIn=true;
+  if(state.player){ try{ state.player.unMute(); state.player.setVolume(100);}catch(e){} }
+  $('#playerCover').style.display='none';
+  startDriftLoop();
+  state.currentVideoId=null; // applyIncoming'in videoyu taze yüklemesi için
+  applyIncoming();
+};
+
+// DJ: ilk "çal"da kendi sesini açması için — DJ bar üstünde ayrı buton yerine
+// DJ zaten YouTube kontrollerini görüyor; yine de mute açalım:
+function djUnmuteOnce(){
+  if(state.isDJ && state.player){ try{ state.player.unMute(); state.player.setVolume(100);}catch(e){} state.tunedIn=true; }
+}
+$('#dj_playpause').addEventListener('click',djUnmuteOnce);
+$('#dj_skip').addEventListener('click',djUnmuteOnce);
+
+/* ================================================================
+   10) SIRA (QUEUE)
+   ================================================================ */
+// ortak: sıraya ekle (meta biliniyorsa oEmbed'e gitme)
+async function addToQueue(videoId, meta){
+  meta = meta || await fetchMeta(videoId);
+  await db.collection('communities').doc(state.community.id).collection('queue').add({
+    videoId, title:meta.title, thumb:meta.thumb, author:meta.author||'',
+    addedBy: state.displayName, order: Date.now()
+  });
+  if(!state.community?.nowPlaying){ djUnmuteOnce(); setTimeout(playNext,300); }
+}
+
+const hasSearch = ()=> YT_API_KEY && !YT_API_KEY.startsWith('SENIN_');
+
+// link/ID ise direkt ekle; değilse ara
+$('#dj_add').onclick = async ()=>{
+  const raw=$('#dj_url').value.trim();
+  if(!raw) return;
+  const vid=parseVideoId(raw);
+  if(vid){
+    $('#dj_url').value=''; closeSearch(); toast('Ekleniyor…');
+    await addToQueue(vid);
+    return;
+  }
+  // arama
+  if(!hasSearch()){ toast('Arama için YouTube API key gerekli — link yapıştırabilirsin'); return; }
+  runSearch(raw);
+};
+$('#dj_url').addEventListener('keydown',e=>{ if(e.key==='Enter') $('#dj_add').click(); });
+$('#dj_url').addEventListener('input',()=>{ if(!$('#dj_url').value.trim()) closeSearch(); });
+// dışarı tıklayınca sonuçları kapat
+document.addEventListener('click',e=>{ if(!e.target.closest('.add')) closeSearch(); });
+
+let searchSeq=0;
+function closeSearch(){ $('#searchResults').classList.add('hide'); $('#searchResults').innerHTML=''; }
+async function runSearch(q){
+  const box=$('#searchResults');
+  box.classList.remove('hide');
+  box.innerHTML='<div class="sr-loading">Aranıyor…</div>';
+  const my=++searchSeq;
+  try{
+    const url=`https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&videoEmbeddable=true&maxResults=8&q=${encodeURIComponent(q)}&key=${YT_API_KEY}`;
+    const r=await fetch(url);
+    const j=await r.json();
+    if(my!==searchSeq) return; // eski istek
+    if(j.error){ box.innerHTML=`<div class="sr-msg">Arama hatası: ${esc(j.error.message||'')}</div>`; return; }
+    const items=(j.items||[]).filter(x=>x.id?.videoId);
+    if(!items.length){ box.innerHTML='<div class="sr-msg">Sonuç yok.</div>'; return; }
+    box.innerHTML = items.map(it=>{
+      const v=it.id.videoId, s=it.snippet;
+      const title=esc(s.title), chan=esc(s.channelTitle||'');
+      const thumb=s.thumbnails?.medium?.url || `https://i.ytimg.com/vi/${v}/mqdefault.jpg`;
+      return `<div class="sr-item">
+        <img src="${esc(thumb)}" alt="">
+        <div class="sr-meta"><div class="sr-t">${title}</div><div class="sr-c">${chan}</div></div>
+        <div class="sr-act">
+          <button class="btn sm" data-add="${v}" data-t="${title}" data-th="${esc(thumb)}">+ Sıra</button>
+          <button class="btn sm primary" data-play="${v}" data-t="${title}" data-th="${esc(thumb)}">▶</button>
+        </div>
+      </div>`;
+    }).join('');
+    box.querySelectorAll('[data-add]').forEach(b=>b.onclick=async()=>{
+      await addToQueue(b.dataset.add,{title:b.dataset.t,thumb:b.dataset.th});
+      toast('Sıraya eklendi'); closeSearch(); $('#dj_url').value='';
+    });
+    box.querySelectorAll('[data-play]').forEach(b=>b.onclick=()=>{
+      djUnmuteOnce();
+      playVideo(b.dataset.play,{title:b.dataset.t,thumb:b.dataset.th});
+      toast('Çalınıyor'); closeSearch(); $('#dj_url').value='';
+    });
+  }catch(e){
+    if(my!==searchSeq) return;
+    box.innerHTML='<div class="sr-msg">Aramaya ulaşılamadı (key/kısıt?).</div>';
+  }
+}
+
+function watchQueue(){
+  state.unsub.queue = db.collection('communities').doc(state.community.id).collection('queue')
+    .orderBy('order','asc')
+    .onSnapshot(snap=>{
+      state.queue = snap.docs.map(d=>({id:d.id,...d.data()}));
+      renderQueue();
+    });
+}
+function renderQueue(){
+  const ul=$('#queueList'); const np=state.community?.nowPlaying;
+  $('#queueCount').textContent = state.queue.length+' parça';
+  let html='';
+  if(np){
+    html += `<li class="now">
+      <img src="${esc(np.thumb||'')}" alt="">
+      <div class="qmeta"><div class="t">${esc(np.title||'')}</div><div class="b">${np.isPlaying?'▸ şimdi çalıyor':'⏸ duraklatıldı'}</div></div>
+      ${state.isDJ?'<div class="qact"><button class="icon-btn" title="Geç" onclick="playNext()">⏭</button></div>':''}
+    </li>`;
+  }
+  if(!state.queue.length && !np){
+    ul.innerHTML = `<li class="list-empty">${state.isDJ?'Yukarıdan YouTube linki ekleyerek sıraya parça at.':'DJ henüz sıraya bir şey eklemedi.'}</li>`;
+    return;
+  }
+  state.queue.forEach((q,i)=>{
+    html += `<li>
+      <img src="${esc(q.thumb||'')}" alt="">
+      <div class="qmeta"><div class="t">${esc(q.title)}</div><div class="b">${i+1}. sırada · ${esc(q.addedBy||'')}</div></div>
+      ${state.isDJ?`<div class="qact">
+        <button class="icon-btn play" title="Şimdi çal" onclick="djPlayFromQueue('${q.id}')">▶</button>
+        <button class="icon-btn" title="Kaldır" onclick="djRemoveQueue('${q.id}')">✕</button>
+      </div>`:''}
+    </li>`;
+  });
+  ul.innerHTML=html;
+}
+window.djPlayFromQueue = async (qid)=>{
+  const item = state.queue.find(x=>x.id===qid); if(!item) return;
+  djUnmuteOnce();
+  await db.collection('communities').doc(state.community.id).collection('queue').doc(qid).delete();
+  playVideo(item.videoId,{title:item.title,thumb:item.thumb});
+};
+window.djRemoveQueue = (qid)=> db.collection('communities').doc(state.community.id).collection('queue').doc(qid).delete();
+window.playNext = playNext;
+
+/* ================================================================
+   11) KAYITLI LİSTELER (PLAYLIST)
+   ================================================================ */
+$('#pl_save').onclick = async ()=>{
+  const items=[];
+  if(state.community?.nowPlaying) items.push({videoId:state.community.nowPlaying.videoId,title:state.community.nowPlaying.title,thumb:state.community.nowPlaying.thumb});
+  state.queue.forEach(q=>items.push({videoId:q.videoId,title:q.title,thumb:q.thumb}));
+  if(!items.length){ toast('Kaydedilecek parça yok'); return; }
+  const name=prompt('Liste adı:','Liste '+ (state.playlists.length+1));
+  if(!name) return;
+  await db.collection('communities').doc(state.community.id).collection('playlists').add({
+    name, items, createdAt:FV.serverTimestamp()
+  });
+  toast('Liste kaydedildi');
+};
+$('#pl_load').onclick = async ()=>{
+  const id=$('#pl_select').value; if(!id){ toast('Bir liste seç'); return; }
+  const pl=state.playlists.find(p=>p.id===id); if(!pl) return;
+  if(!state.isDJ){ toast('Sadece DJ liste yükleyebilir'); return; }
+  const batch=db.batch(); const col=db.collection('communities').doc(state.community.id).collection('queue');
+  let t=Date.now();
+  pl.items.forEach(it=>{ batch.set(col.doc(), {videoId:it.videoId,title:it.title,thumb:it.thumb,addedBy:'liste: '+pl.name,order:t++}); });
+  await batch.commit();
+  toast(pl.items.length+' parça sıraya eklendi');
+  if(!state.community?.nowPlaying){ djUnmuteOnce(); setTimeout(playNext,300); }
+};
+$('#pl_del').onclick = async ()=>{
+  const id=$('#pl_select').value; if(!id) return;
+  if(!confirm('Bu liste silinsin mi?')) return;
+  await db.collection('communities').doc(state.community.id).collection('playlists').doc(id).delete();
+  toast('Liste silindi');
+};
+function watchPlaylists(){
+  state.unsub.playlists = db.collection('communities').doc(state.community.id).collection('playlists')
+    .orderBy('createdAt','desc')
+    .onSnapshot(snap=>{
+      state.playlists = snap.docs.map(d=>({id:d.id,...d.data()}));
+      const sel=$('#pl_select'); const cur=sel.value;
+      sel.innerHTML='<option value="">Bir liste seç…</option>'+
+        state.playlists.map(p=>`<option value="${p.id}">${esc(p.name)} (${p.items?.length||0})</option>`).join('');
+      if([...sel.options].some(o=>o.value===cur)) sel.value=cur;
+    });
+}
+
+/* ================================================================
+   12) SOHBET
+   ================================================================ */
+function watchChat(){
+  state.unsub.chat = db.collection('communities').doc(state.community.id).collection('messages')
+    .orderBy('createdAt','asc').limitToLast(120)
+    .onSnapshot(snap=>{
+      const box=$('#chatMsgs');
+      const atBottom = box.scrollHeight-box.scrollTop-box.clientHeight < 80;
+      box.innerHTML='';
+      snap.forEach(d=>{
+        const m=d.data();
+        if(m.sys){ box.insertAdjacentHTML('beforeend',`<div class="msg sys">— ${esc(m.text)} —</div>`); return; }
+        const me = m.name===state.displayName;
+        box.insertAdjacentHTML('beforeend',
+          `<div class="msg"><div class="m-top"><span class="m-name ${me?'me':''}">${esc(m.name)}</span><span class="m-time">${timeStr(m.createdAt)}</span></div><div class="m-body">${esc(m.text)}</div></div>`);
+      });
+      if(atBottom) box.scrollTop=box.scrollHeight;
+    });
+}
+function sendChat(){
+  const inp=$('#chatInput'); const txt=inp.value.trim(); if(!txt) return;
+  inp.value='';
+  db.collection('communities').doc(state.community.id).collection('messages').add({
+    name: state.displayName, text:txt, uid: state.user?.uid||null, createdAt:FV.serverTimestamp()
+  });
+}
+$('#chatSend').onclick=sendChat;
+$('#chatInput').addEventListener('keydown',e=>{ if(e.key==='Enter') sendChat(); });
+
+/* ================================================================
+   13) PRESENCE (dinleyici sayısı)
+   ================================================================ */
+function startPresence(){
+  const ref=db.collection('communities').doc(state.community.id).collection('presence').doc(state.sessionId);
+  const beat=()=>ref.set({name:state.displayName, isDJ:state.isDJ, lastSeen:Date.now()});
+  beat();
+  state.heartbeat=setInterval(beat,20000);
+  state.unsub.presence = db.collection('communities').doc(state.community.id).collection('presence')
+    .onSnapshot(snap=>{
+      const now=Date.now(); let n=0;
+      snap.forEach(d=>{ if(now-(d.data().lastSeen||0) < 60000) n++; });
+      $('#lisCount').textContent=n;
+    });
+}
+window.addEventListener('beforeunload',()=>{
+  if(state.community && state.displayName){
+    try{ db.collection('communities').doc(state.community.id).collection('presence').doc(state.sessionId).delete(); }catch(e){}
+  }
+});
+
+/* ================================================================
+   14) BAŞLANGIÇ
+   ================================================================ */
+watchCommunities();
+// davet linkiyle geldiyse doğrudan odaya
+const cid = new URLSearchParams(location.search).get('c');
+if(cid){ setTimeout(()=>enterRoom(cid), 400); }
+</script>
+</body>
+</html>
