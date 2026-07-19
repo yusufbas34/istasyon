@@ -2,7 +2,8 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0">
+<meta name="theme-color" content="#0E1116">
 <title>FREKANS — Arkadaşlarınla senkron radyo</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -146,7 +147,7 @@
   .tabs button.on{background:var(--panel2); color:var(--text)}
 
   /* ---------- room ---------- */
-  .room{display:none; position:relative; z-index:1; height:100vh; grid-template-columns:1fr 340px; grid-template-rows:auto 1fr}
+  .room{display:none; position:relative; z-index:1; height:100vh; height:100dvh; overflow:hidden; grid-template-columns:1fr 340px; grid-template-rows:auto minmax(0,1fr)}
   .room.show{display:grid}
   .room .console{
     grid-column:1/-1; display:flex; align-items:center; justify-content:space-between; gap:16px;
@@ -170,8 +171,8 @@
   .role-badge.dj{background:var(--amber-dim); color:var(--amber-soft); border:1px solid rgba(255,159,28,.3)}
   .role-badge.listener{background:var(--panel2); color:var(--muted); border:1px solid var(--border)}
 
-  .stage{padding:22px; overflow-y:auto}
-  .player-wrap{background:#000; border-radius:var(--r); overflow:hidden; border:1px solid var(--border); position:relative; aspect-ratio:16/9}
+  .stage{padding:22px; overflow-y:auto; min-height:0}
+  .player-wrap{background:#000; border-radius:var(--r); overflow:hidden; border:1px solid var(--border); position:relative; aspect-ratio:16/9; max-height:min(56vh,520px); margin:0 auto; width:100%}
   #ytplayer{width:100%; height:100%}
   .player-cover{position:absolute; inset:0; display:grid; place-items:center; background:linear-gradient(160deg,#12161D,#0A0D12); text-align:center; padding:30px}
   .player-cover .big{font-family:var(--disp); font-size:26px; font-weight:600; margin:16px 0 8px}
@@ -205,6 +206,8 @@
   .queue li{display:flex; align-items:center; gap:12px; padding:11px 18px; border-bottom:1px solid var(--border); font-size:14px}
   .queue li:last-child{border-bottom:none}
   .queue li.now{background:var(--amber-dim)}
+  .queue li.q-played{opacity:.55}
+  .queue li.q-divider{padding:8px 18px; font-family:var(--mono); font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted2); background:var(--bg); border-bottom:1px solid var(--border)}
   .queue li img{width:52px; height:34px; object-fit:cover; border-radius:6px; flex-shrink:0; background:var(--panel2)}
   .queue li .qmeta{min-width:0; flex:1}
   .queue li .qmeta .t{white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-weight:500}
@@ -238,12 +241,57 @@
   .stage::-webkit-scrollbar-thumb,.chat-msgs::-webkit-scrollbar-thumb,.queue::-webkit-scrollbar-thumb{background:var(--border2); border-radius:4px}
 
   .toast{position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px); background:var(--panel3); border:1px solid var(--border2); color:var(--text); padding:13px 20px; border-radius:11px; font-size:14px; z-index:100; opacity:0; transition:.25s; box-shadow:0 12px 40px rgba(0,0,0,.4)}
+
+  /* segmented control (kanal türü) */
+  .seg{display:flex; gap:6px; background:var(--bg); padding:5px; border-radius:11px}
+  .seg button{flex:1; padding:11px 8px; border-radius:8px; font-weight:600; font-size:14px; color:var(--muted); border:1px solid transparent}
+  .seg button.on{background:var(--panel2); color:var(--text); border-color:var(--border2)}
+
+  /* tepki çubuğu */
+  .react-bar{display:flex; gap:8px; margin-top:14px; flex-wrap:wrap}
+  .react-bar button{width:46px; height:46px; border-radius:12px; font-size:22px; background:var(--panel); border:1px solid var(--border); transition:.12s; display:grid; place-items:center}
+  .react-bar button:hover{transform:translateY(-2px) scale(1.05); border-color:var(--amber); background:var(--panel2)}
+  .react-bar button:active{transform:scale(.9)}
+
+  /* yukarıdan düşen emoji katmanı */
+  .emoji-layer{position:fixed; inset:0; pointer-events:none; z-index:90; overflow:hidden}
+  .emoji-fall{position:absolute; top:-50px; font-size:34px; will-change:transform,opacity; animation:fall linear forwards}
+  @keyframes fall{
+    0%{transform:translateY(-50px) rotate(0deg); opacity:0}
+    8%{opacity:1}
+    85%{opacity:1}
+    100%{transform:translateY(102vh) rotate(var(--spin)); opacity:.15}
+  }
   .toast.show{opacity:1; transform:translateX(-50%) translateY(0)}
 
   @media(max-width:900px){
-    .room.show{grid-template-columns:1fr; grid-template-rows:auto auto 1fr}
-    .chat{grid-row:3; grid-column:1; border-left:none; border-top:1px solid var(--border); max-height:44vh}
-    .stage{grid-column:1}
+    .room.show{grid-template-columns:1fr; grid-template-rows:auto minmax(0,1fr) auto}
+    .stage{grid-column:1; grid-row:2}
+    .chat{grid-row:3; grid-column:1; border-left:none; border-top:1px solid var(--border); height:38dvh; min-height:200px}
+    .player-wrap{max-height:38vh}
+    .console{flex-wrap:wrap; gap:10px; padding:11px 14px}
+    .console .left{flex:1 1 100%; order:1}
+    .console .right{flex:1 1 100%; order:2; justify-content:space-between; gap:8px}
+    .console .right .btn{padding:8px 11px}
+    .console .title h2{font-size:17px}
+    .stage{padding:14px}
+    .dj-bar{gap:8px}
+    .dj-bar .add{flex:1 1 100%; min-width:0}
+    .dj-bar #dj_playpause,.dj-bar #dj_skip{flex:1}
+    .lists{gap:16px; margin-top:18px}
+    .search-results{max-height:52vh}
+    .hero h1{font-size:34px}
+    .hero p{font-size:16px}
+    header.top{padding:16px 14px}
+    .wrap{padding:0 14px}
+    .grid{grid-template-columns:1fr}
+    .modal{padding:24px 20px; border-radius:16px}
+    .field input,.field textarea,.chat-in input,.dj-bar .add input{font-size:16px} /* iOS zoom engelle */
+  }
+  @media(max-width:420px){
+    .console .right{flex-wrap:wrap}
+    .listeners{font-size:12px}
+    .role-badge{display:none}
   }
 </style>
 </head>
@@ -316,9 +364,17 @@
   <div class="modal">
     <button class="x" data-close>&times;</button>
     <h2>Yeni istasyon</h2>
-    <p class="sub">Topluluğun herkese açık listede görünür, sadece sen yayın yaparsın.</p>
+    <p class="sub">Sadece sen yayın yaparsın. Kanalı herkese açık ya da şifreli yapabilirsin.</p>
     <div class="field"><label>İstasyon adı</label><input id="cm_name" placeholder="ör. Gece Vardiyası FM"></div>
     <div class="field"><label>Kısa açıklama</label><input id="cm_desc" placeholder="ör. Geç saat lo-fi ve indie"></div>
+    <div class="field">
+      <label>Kanal türü</label>
+      <div class="seg" id="cm_type">
+        <button type="button" data-v="public" class="on">🌐 Herkese açık</button>
+        <button type="button" data-v="private">🔒 Özel (şifreli)</button>
+      </div>
+    </div>
+    <div class="field hide" id="cm_pwwrap"><label>Kanal şifresi</label><input id="cm_pw" placeholder="Dinleyicilerin gireceği şifre"></div>
     <div class="err" id="cm_err"></div>
     <button class="btn primary" id="doCreate" style="width:100%">Yayına başla</button>
   </div>
@@ -331,6 +387,7 @@
     <h2 id="jm_title">Yayına katıl</h2>
     <p class="sub" id="jm_sub">Sohbette görünecek bir isim seç. Kayıt gerekmez.</p>
     <div class="field"><label>Görünen ad</label><input id="jm_name" placeholder="ör. Yusuf" maxlength="24"></div>
+    <div class="field hide" id="jm_pwwrap"><label>🔒 Kanal şifresi</label><input id="jm_pw" type="password" placeholder="DJ'in verdiği şifre"></div>
     <div class="err" id="jm_err"></div>
     <button class="btn primary" id="doJoin" style="width:100%">Dinlemeye başla</button>
   </div>
@@ -363,6 +420,16 @@
         <p id="coverText">DJ bir şarkı açtığında burada göreceksin.</p>
         <button class="btn primary hide" id="tuneIn">🔊 Sesi aç ve dinle</button>
       </div>
+    </div>
+
+    <!-- tepki çubuğu (herkes) -->
+    <div class="react-bar" id="reactBar">
+      <button data-emoji="❤️">❤️</button>
+      <button data-emoji="🔥">🔥</button>
+      <button data-emoji="😂">😂</button>
+      <button data-emoji="👏">👏</button>
+      <button data-emoji="🎉">🎉</button>
+      <button data-emoji="😮">😮</button>
     </div>
 
     <!-- DJ controls -->
@@ -412,6 +479,7 @@
   </aside>
 </div>
 
+<div class="emoji-layer" id="emojiLayer"></div>
 <div class="toast" id="toast"></div>
 
 <!-- ============ FIREBASE ============ -->
@@ -459,11 +527,12 @@ const state = {
   playerReady:false,
   tunedIn:false,        // ses açıldı mı
   currentVideoId:null,
-  unsub:{ comms:null, room:null, queue:null, chat:null, presence:null, playlists:null },
+  unsub:{ comms:null, room:null, queue:null, chat:null, presence:null, playlists:null, reactions:null },
   queue:[],
   playlists:[],
   heartbeat:null,
   driftTimer:null,
+  djSyncTimer:null,
   syncGuard:false
 };
 
@@ -604,11 +673,20 @@ function renderNav(){
 /* ================================================================
    6) TOPLULUK OLUŞTUR
    ================================================================ */
+// kanal türü segmenti
+let cmType='public';
+$('#cm_type').querySelectorAll('button').forEach(b=>b.onclick=()=>{
+  cmType=b.dataset.v;
+  $('#cm_type').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));
+  $('#cm_pwwrap').classList.toggle('hide', cmType!=='private');
+});
 $('#doCreate').onclick = async ()=>{
   if(!state.user) return;
   const name=$('#cm_name').value.trim(), desc=$('#cm_desc').value.trim();
+  const pw=$('#cm_pw').value.trim();
   const err=$('#cm_err'); err.textContent='';
   if(name.length<2) return err.textContent='Bir istasyon adı gir.';
+  if(cmType==='private' && pw.length<3) return err.textContent='Özel kanal için en az 3 karakter şifre gir.';
   const btn=$('#doCreate'); btn.disabled=true; btn.textContent='Kuruluyor…';
   try{
     const ref = await db.collection('communities').add({
@@ -617,10 +695,12 @@ $('#doCreate').onclick = async ()=>{
       ownerName: state.profile?.username || 'dj',
       createdAt: FV.serverTimestamp(),
       freq: (87 + Math.random()*20).toFixed(1),   // dekoratif "frekans"
+      isPrivate: cmType==='private',
+      passcode: cmType==='private' ? pw : null,
       nowPlaying:null, isLive:false
     });
     closeM('createModal');
-    $('#cm_name').value=''; $('#cm_desc').value='';
+    $('#cm_name').value=''; $('#cm_desc').value=''; $('#cm_pw').value='';
     toast('İstasyon yayında!');
     enterRoom(ref.id);
   }catch(e){ err.textContent='Oluşturulamadı: '+(e.message||''); }
@@ -648,7 +728,7 @@ function watchCommunities(){
         const card=document.createElement('div');
         card.className='station';
         card.innerHTML=`
-          <div class="freq"><span>FM ${c.freq||'—'}</span>
+          <div class="freq"><span>FM ${c.freq||'—'} ${c.isPrivate?'· 🔒 Özel':''}</span>
             <span class="live ${live?'':'off'}"><span class="dot"></span>${live?'CANLI':'KAPALI'}</span></div>
           <h3>${esc(c.name)}</h3>
           <div class="desc">${esc(c.desc||'Açıklama yok.')}</div>
@@ -683,14 +763,18 @@ async function enterRoom(id){
     launchRoom();
   }else{
     const saved = localStorage.getItem('frekans_name');
+    const priv = !!c.isPrivate;
     $('#jm_title').textContent = c.name;
-    $('#jm_sub').textContent = 'Sohbette görünecek bir isim seç. Kayıt gerekmez.';
+    $('#jm_sub').textContent = priv ? '🔒 Bu özel bir kanal. İsmini ve DJ\'in verdiği şifreyi gir.' : 'Sohbette görünecek bir isim seç. Kayıt gerekmez.';
     $('#jm_name').value = saved||'';
+    $('#jm_pwwrap').classList.toggle('hide', !priv);
+    $('#jm_pw').value='';
     $('#jm_err').textContent='';
     openM('joinModal');
     $('#doJoin').onclick = ()=>{
       const nm=$('#jm_name').value.trim();
       if(nm.length<2){ $('#jm_err').textContent='Bir isim gir.'; return; }
+      if(priv && $('#jm_pw').value.trim() !== (c.passcode||'')){ $('#jm_err').textContent='Şifre yanlış.'; return; }
       localStorage.setItem('frekans_name',nm);
       state.displayName=nm;
       closeM('joinModal');
@@ -717,12 +801,27 @@ function launchRoom(){
   watchChat();
   watchPlaylists();
   startPresence();
+  watchReactions();               // canlı emoji tepkileri
+  askNotifyPermission();          // odaya girince bildirim izni iste
+  if(state.isDJ) startDjSyncLoop(); // DJ pozisyonu düzenli yayınlasın
+}
+
+// DJ: her 3sn pozisyonu güncelle → geç katılanlar doğru saniyeye düşer
+function startDjSyncLoop(){
+  if(state.djSyncTimer) return;
+  state.djSyncTimer = setInterval(()=>{
+    if(state.isDJ && state.currentVideoId && state.playerReady
+       && state.player.getPlayerState()===YT.PlayerState.PLAYING){
+      broadcastNow(true);
+    }
+  }, 3000);
 }
 
 function detachRoom(){
   Object.keys(state.unsub).forEach(k=>{ if(k!=='comms' && state.unsub[k]){ state.unsub[k](); state.unsub[k]=null; }});
   if(state.heartbeat){ clearInterval(state.heartbeat); state.heartbeat=null; }
   if(state.driftTimer){ clearInterval(state.driftTimer); state.driftTimer=null; }
+  if(state.djSyncTimer){ clearInterval(state.djSyncTimer); state.djSyncTimer=null; }
 }
 
 $('#btnLeave').onclick = async ()=>{
@@ -802,29 +901,32 @@ function broadcastNow(isPlaying){
   });
 }
 
-// DJ: sıradaki şarkıya geç
+// DJ: sıradaki (çalınmamış) şarkıya geç
 async function playNext(){
   if(!state.isDJ) return;
-  const q = state.queue;
-  if(!q.length){
+  // şu an çalanı "çalındı" işaretle
+  const cur = state.currentVideoId;
+  const curItem = state.queue.find(x=>x.videoId===cur && !x.played);
+  const pending = state.queue.filter(x=>!x.played);
+  const next = pending.find(x=>x.videoId!==cur) || (curItem?null:pending[0]);
+  if(curItem){
+    try{ await db.collection('communities').doc(state.community.id).collection('queue').doc(curItem.id).update({played:true, playedAt:Date.now()}); }catch(e){}
+  }
+  if(!next){
     state.currentVideoId=null; state._curMeta=null;
     await db.collection('communities').doc(state.community.id).update({isLive:false, nowPlaying:null});
     try{ state.player.stopVideo(); }catch(e){}
     return;
   }
-  const next = q[0];
-  await db.collection('communities').doc(state.community.id).collection('queue').doc(next.id).delete();
-  playVideo(next.videoId,{title:next.title,thumb:next.thumb});
+  playVideo(next.videoId,{title:next.title,thumb:next.thumb},next.id);
 }
 
 // DJ: belirli videoyu çal + yayınla
-function playVideo(videoId, meta){
+function playVideo(videoId, meta, queueId){
   state.currentVideoId = videoId;
   state._curMeta = meta||{};
-  if(state.playerReady){
-    state.player.loadVideoById(videoId);
-    if(state.tunedIn===false && state.isDJ){ /* DJ sesi açana kadar mute kalır */ }
-  }
+  state._curQueueId = queueId||null;
+  if(state.playerReady){ state.player.loadVideoById(videoId); }
   broadcastNow(true);
 }
 
@@ -894,14 +996,27 @@ function targetPos(np){
 function syncToBroadcast(np, force){
   if(state.isDJ) return;            // DJ kendisi kaynak, hizalamaz
   if(!state.playerReady || !np) return;
+  const st = state.player.getPlayerState();
+  // henüz oynatmaya hazır değilse (buffering/cued) bekle
+  if(st===YT.PlayerState.BUFFERING && !force) return;
   const want = targetPos(np);
   const have = state.player.getCurrentTime()||0;
+  const diff = want - have;
   if(np.isPlaying){
-    if(force || Math.abs(have-want) > 1.8){ state.player.seekTo(want,true); }
-    if(state.player.getPlayerState()!==YT.PlayerState.PLAYING){ state.player.playVideo(); }
+    // büyük kayma → sert seek; küçük kayma → oynatma hızıyla yumuşak toparla
+    if(force || Math.abs(diff) > 1.0){
+      state.player.seekTo(want + 0.25, true);   // seek gecikmesini telafi
+      state.player.setPlaybackRate(1);
+    }else if(Math.abs(diff) > 0.35){
+      state.player.setPlaybackRate(diff > 0 ? 1.05 : 0.95); // 1.5sn içinde eşitler
+    }else{
+      state.player.setPlaybackRate(1);
+    }
+    if(st!==YT.PlayerState.PLAYING && st!==YT.PlayerState.BUFFERING){ state.player.playVideo(); }
   }else{
-    if(state.player.getPlayerState()===YT.PlayerState.PLAYING){ state.player.pauseVideo(); }
-    if(Math.abs(have-(np.position||0))>1.5){ state.player.seekTo(np.position||0,true); }
+    state.player.setPlaybackRate(1);
+    if(st===YT.PlayerState.PLAYING){ state.player.pauseVideo(); }
+    if(Math.abs(have-(np.position||0))>0.8){ state.player.seekTo(np.position||0,true); }
   }
 }
 
@@ -912,7 +1027,7 @@ function startDriftLoop(){
     if(state.tunedIn && state.community?.nowPlaying && !state.syncGuard){
       syncToBroadcast(state.community.nowPlaying,false);
     }
-  }, 4000);
+  }, 2000);
 }
 
 // "Sesi aç" (dinleyici gesture'ı) / DJ için de sesi açar
@@ -1020,7 +1135,9 @@ function watchQueue(){
 }
 function renderQueue(){
   const ul=$('#queueList'); const np=state.community?.nowPlaying;
-  $('#queueCount').textContent = state.queue.length+' parça';
+  const upcoming = state.queue.filter(q=>!q.played && q.videoId!==state.currentVideoId);
+  const played = state.queue.filter(q=>q.played);
+  $('#queueCount').textContent = upcoming.length+' sırada';
   let html='';
   if(np){
     html += `<li class="now">
@@ -1029,11 +1146,11 @@ function renderQueue(){
       ${state.isDJ?'<div class="qact"><button class="icon-btn" title="Geç" onclick="playNext()">⏭</button></div>':''}
     </li>`;
   }
-  if(!state.queue.length && !np){
-    ul.innerHTML = `<li class="list-empty">${state.isDJ?'Yukarıdan YouTube linki ekleyerek sıraya parça at.':'DJ henüz sıraya bir şey eklemedi.'}</li>`;
+  if(!upcoming.length && !np && !played.length){
+    ul.innerHTML = `<li class="list-empty">${state.isDJ?'Yukarıdan şarkı arayıp ya da link ekleyip sıraya parça at.':'DJ henüz sıraya bir şey eklemedi.'}</li>`;
     return;
   }
-  state.queue.forEach((q,i)=>{
+  upcoming.forEach((q,i)=>{
     html += `<li>
       <img src="${esc(q.thumb||'')}" alt="">
       <div class="qmeta"><div class="t">${esc(q.title)}</div><div class="b">${i+1}. sırada · ${esc(q.addedBy||'')}</div></div>
@@ -1043,13 +1160,29 @@ function renderQueue(){
       </div>`:''}
     </li>`;
   });
+  if(played.length){
+    html += `<li class="q-divider">Çalınanlar</li>`;
+    played.slice().reverse().forEach(q=>{
+      html += `<li class="q-played">
+        <img src="${esc(q.thumb||'')}" alt="">
+        <div class="qmeta"><div class="t">${esc(q.title)}</div><div class="b">✓ çalındı · ${esc(q.addedBy||'')}</div></div>
+        ${state.isDJ?`<div class="qact">
+          <button class="icon-btn play" title="Tekrar çal" onclick="djPlayFromQueue('${q.id}')">↻</button>
+          <button class="icon-btn" title="Sil" onclick="djRemoveQueue('${q.id}')">✕</button>
+        </div>`:''}
+      </li>`;
+    });
+  }
   ul.innerHTML=html;
 }
 window.djPlayFromQueue = async (qid)=>{
   const item = state.queue.find(x=>x.id===qid); if(!item) return;
   djUnmuteOnce();
-  await db.collection('communities').doc(state.community.id).collection('queue').doc(qid).delete();
-  playVideo(item.videoId,{title:item.title,thumb:item.thumb});
+  // önceki çalanı çalındı işaretle, seçileni "çalınmadı"ya çek (tekrar çalınabilsin)
+  const prev = state.queue.find(x=>x.videoId===state.currentVideoId && !x.played);
+  if(prev){ try{ await db.collection('communities').doc(state.community.id).collection('queue').doc(prev.id).update({played:true,playedAt:Date.now()}); }catch(e){} }
+  try{ await db.collection('communities').doc(state.community.id).collection('queue').doc(qid).update({played:false}); }catch(e){}
+  playVideo(item.videoId,{title:item.title,thumb:item.thumb},qid);
 };
 window.djRemoveQueue = (qid)=> db.collection('communities').doc(state.community.id).collection('queue').doc(qid).delete();
 window.playNext = playNext;
@@ -1102,6 +1235,7 @@ function watchPlaylists(){
    12) SOHBET
    ================================================================ */
 function watchChat(){
+  let firstLoad = true;
   state.unsub.chat = db.collection('communities').doc(state.community.id).collection('messages')
     .orderBy('createdAt','asc').limitToLast(120)
     .onSnapshot(snap=>{
@@ -1116,17 +1250,115 @@ function watchChat(){
           `<div class="msg"><div class="m-top"><span class="m-name ${me?'me':''}">${esc(m.name)}</span><span class="m-time">${timeStr(m.createdAt)}</span></div><div class="m-body">${esc(m.text)}</div></div>`);
       });
       if(atBottom) box.scrollTop=box.scrollHeight;
+
+      // yeni gelen mesajlar için bildirim (ilk yüklemede sessiz)
+      if(!firstLoad){
+        snap.docChanges().forEach(ch=>{
+          if(ch.type!=='added') return;
+          const m=ch.doc.data();
+          if(m.sys || m.name===state.displayName) return;   // sistem ya da kendi mesajım
+          notifyChat(m.name, m.text);
+        });
+      }
+      firstLoad = false;
     });
+}
+
+/* --- Bildirim (masaüstü sağ-alt + mobil) --- */
+function askNotifyPermission(){
+  if(!('Notification' in window)) return;
+  if(Notification.permission==='default'){
+    Notification.requestPermission().catch(()=>{});
+  }
+}
+function notifyChat(name, text){
+  // sadece sekme arka plandayken bildir (öndeyken zaten görüyor)
+  if(document.visibilityState==='visible') { pingSound(); return; }
+  if(!('Notification' in window) || Notification.permission!=='granted') return;
+  try{
+    const n = new Notification(`${name} · ${state.community?.name||'FREKANS'}`, {
+      body: text,
+      tag: 'frekans-chat',        // üst üste yığılmasın
+      renotify: true,
+      icon: 'https://i.ytimg.com/vi/'+(state.currentVideoId||'')+'/default.jpg'
+    });
+    n.onclick = ()=>{ window.focus(); n.close(); };
+    pingSound();
+  }catch(e){}
+}
+// hafif "ding" — WebAudio (dosya gerektirmez)
+let _actx;
+function pingSound(){
+  try{
+    _actx = _actx || new (window.AudioContext||window.webkitAudioContext)();
+    if(_actx.state==='suspended') _actx.resume();
+    const o=_actx.createOscillator(), g=_actx.createGain();
+    o.type='sine'; o.frequency.value=880;
+    g.gain.setValueAtTime(0.0001,_actx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.15,_actx.currentTime+0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001,_actx.currentTime+0.25);
+    o.connect(g); g.connect(_actx.destination);
+    o.start(); o.stop(_actx.currentTime+0.26);
+  }catch(e){}
 }
 function sendChat(){
   const inp=$('#chatInput'); const txt=inp.value.trim(); if(!txt) return;
   inp.value='';
+  askNotifyPermission();   // ilk mesajda izin iste
   db.collection('communities').doc(state.community.id).collection('messages').add({
     name: state.displayName, text:txt, uid: state.user?.uid||null, createdAt:FV.serverTimestamp()
   });
 }
 $('#chatSend').onclick=sendChat;
 $('#chatInput').addEventListener('keydown',e=>{ if(e.key==='Enter') sendChat(); });
+
+/* ================================================================
+   12b) TEPKİLER (herkese senkron emoji yağmuru)
+   ================================================================ */
+// tepki butonları → Firestore'a yaz (herkes görür)
+$('#reactBar').querySelectorAll('button').forEach(b=>{
+  b.onclick = ()=>{
+    const emoji=b.dataset.emoji;
+    rainEmoji(emoji, 10);   // basana anında göster
+    db.collection('communities').doc(state.community.id).collection('reactions').add({
+      emoji, by: state.displayName||'', at: Date.now()
+    }).catch(()=>{});
+  };
+});
+
+let _reactStart=Date.now();
+function watchReactions(){
+  _reactStart=Date.now();
+  state.unsub.reactions = db.collection('communities').doc(state.community.id).collection('reactions')
+    .orderBy('at','desc').limit(15)
+    .onSnapshot(snap=>{
+      snap.docChanges().forEach(ch=>{
+        if(ch.type!=='added') return;
+        const r=ch.doc.data();
+        if(!r || r.at < _reactStart) return;          // odaya girmeden öncekiler es geç
+        if(r.by === (state.displayName||'')) return;  // kendiminkini iki kez gösterme
+        rainEmoji(r.emoji, 10);
+      });
+    });
+}
+
+// 10 tane emojiyi yukarıdan aşağıya yağdır
+function rainEmoji(emoji, count){
+  const layer=$('#emojiLayer'); if(!layer) return;
+  for(let i=0;i<count;i++){
+    const el=document.createElement('div');
+    el.className='emoji-fall';
+    el.textContent=emoji;
+    const dur = 3 + Math.random()*2.5;          // 3-5.5sn
+    el.style.left = (Math.random()*94) + 'vw';
+    el.style.animationDuration = dur+'s';
+    el.style.animationDelay = (Math.random()*0.5)+'s';
+    el.style.fontSize = (26 + Math.random()*22)+'px';
+    el.style.setProperty('--spin', (Math.random()*720-360)+'deg');
+    layer.appendChild(el);
+    setTimeout(()=>el.remove(), (dur+1)*1000);
+  }
+}
 
 /* ================================================================
    13) PRESENCE (dinleyici sayısı)
