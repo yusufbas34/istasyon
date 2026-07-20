@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0">
 <meta name="theme-color" content="#0E1116">
-<title>FREKANS — Arkadaşlarınla senkron radyo</title>
+<title>İSTASYON — Arkadaşlarınla senkron radyo</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -174,11 +174,18 @@
   .stage{padding:22px; overflow-y:auto; min-height:0}
   .player-wrap{background:#000; border-radius:var(--r); overflow:hidden; border:1px solid var(--border); position:relative; aspect-ratio:16/9; max-height:min(56vh,520px); margin:0 auto; width:100%}
   #ytplayer{width:100%; height:100%}
-  .player-cover{position:absolute; inset:0; display:grid; place-items:center; background:linear-gradient(160deg,#12161D,#0A0D12); text-align:center; padding:30px}
-  .player-cover .big{font-family:var(--disp); font-size:26px; font-weight:600; margin:16px 0 8px}
-  .player-cover p{color:var(--muted); margin-bottom:22px; max-width:34ch}
+  .player-cover{position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; background:linear-gradient(160deg,#12161D,#0A0D12); text-align:center; padding:24px}
+  .player-cover .big{font-family:var(--disp); font-size:24px; font-weight:600; margin:10px 0 4px; line-height:1.15; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; max-width:90%}
+  .player-cover p{color:var(--muted); margin-bottom:16px; max-width:34ch; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden}
 
   .dj-bar{display:flex; gap:10px; margin-top:16px; flex-wrap:wrap; align-items:center}
+  .req-bar{display:flex; gap:8px; margin-top:16px}
+  .req-bar input{flex:1; min-width:0; background:var(--bg); border:1px solid var(--border2); color:var(--text); padding:12px 14px; border-radius:10px; font-size:14px}
+  .req-bar input:focus{outline:none; border-color:var(--amber)}
+  .req-badge{display:inline-grid; place-items:center; min-width:20px; height:20px; padding:0 6px; border-radius:10px; background:var(--amber); color:#14110A; font-family:var(--mono); font-size:11px; font-weight:700; vertical-align:middle}
+  .qact .icon-btn.ok:hover{color:var(--ok)}
+  .qact .icon-btn.no:hover{color:var(--air)}
+  .icon-btn:disabled{opacity:.22; cursor:not-allowed; background:none; border-color:transparent}
   .dj-bar .add{flex:1; min-width:220px; display:flex; gap:8px}
   .dj-bar .add input{flex:1; background:var(--bg); border:1px solid var(--border2); color:var(--text); padding:11px 14px; border-radius:10px; font-size:14px}
   .dj-bar .add input:focus{outline:none; border-color:var(--amber)}
@@ -269,6 +276,11 @@
     .stage{grid-column:1; grid-row:2}
     .chat{grid-row:3; grid-column:1; border-left:none; border-top:1px solid var(--border); height:38dvh; min-height:200px}
     .player-wrap{max-height:38vh}
+    .player-cover{padding:14px; gap:4px}
+    .player-cover .big{font-size:16px; margin:6px 0 2px; -webkit-line-clamp:2}
+    .player-cover p{font-size:12px; margin-bottom:10px; -webkit-line-clamp:1}
+    .player-cover .eq{transform:scale(.7)}
+    #tuneIn{padding:10px 16px; font-size:14px}
     .console{flex-wrap:wrap; gap:10px; padding:11px 14px}
     .console .left{flex:1 1 100%; order:1}
     .console .right{flex:1 1 100%; order:2; justify-content:space-between; gap:8px}
@@ -286,7 +298,7 @@
     .wrap{padding:0 14px}
     .grid{grid-template-columns:1fr}
     .modal{padding:24px 20px; border-radius:16px}
-    .field input,.field textarea,.chat-in input,.dj-bar .add input{font-size:16px} /* iOS zoom engelle */
+    .field input,.field textarea,.chat-in input,.dj-bar .add input,.req-bar input{font-size:16px} /* iOS zoom engelle */
   }
   @media(max-width:420px){
     .console .right{flex-wrap:wrap}
@@ -301,8 +313,8 @@
 <div id="landing">
   <header class="top">
     <div class="logo">
-      <div class="mark">FR</div>
-      <div><b>FREKANS</b><small>SENKRON RADYO</small></div>
+      <div class="mark"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#14110A" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="2" fill="#14110A" stroke="none"/><path d="M8.5 8.5a5 5 0 000 7"/><path d="M15.5 8.5a5 5 0 010 7"/><path d="M6 6a8.5 8.5 0 000 12"/><path d="M18 6a8.5 8.5 0 010 12"/></svg></div>
+      <div><b>İSTASYON</b><small>SENKRON RADYO</small></div>
     </div>
     <div class="nav-user" id="navUser">
       <button class="btn ghost sm" id="btnLogin">Giriş yap</button>
@@ -316,7 +328,7 @@
       <h1>Aynı şarkı. Aynı saniye. <em>Herkes birlikte.</em></h1>
       <p>Kendi topluluğunu kur, arkadaşlarını davet et ve YouTube'dan çaldığın müziği herkesle senkron dinle. Sağda sohbet, altta sıradaki şarkılar — tıpkı bir radyo istasyonu gibi.</p>
       <div class="cta">
-        <button class="btn primary" id="heroCreate">Kendi istasyonunu kur</button>
+        <button class="btn primary" id="heroCreate">Kendi topluluğunu kur</button>
         <button class="btn ghost" id="heroBrowse">Yayınlara göz at</button>
       </div>
     </section>
@@ -340,7 +352,7 @@
 
     <div id="formLogin">
       <h2>Tekrar hoş geldin</h2>
-      <p class="sub">İstasyonunu yönetmek için giriş yap.</p>
+      <p class="sub">Topluluğunu yönetmek için giriş yap.</p>
       <div class="field"><label>Kullanıcı adı veya e-posta</label><input id="li_id" autocomplete="username"></div>
       <div class="field"><label>Şifre</label><input id="li_pw" type="password" autocomplete="current-password"></div>
       <div class="err" id="li_err"></div>
@@ -363,9 +375,9 @@
 <div class="overlay hide" id="createModal">
   <div class="modal">
     <button class="x" data-close>&times;</button>
-    <h2>Yeni istasyon</h2>
-    <p class="sub">Sadece sen yayın yaparsın. Kanalı herkese açık ya da şifreli yapabilirsin.</p>
-    <div class="field"><label>İstasyon adı</label><input id="cm_name" placeholder="ör. Gece Vardiyası FM"></div>
+    <h2>Yeni topluluk</h2>
+    <p class="sub">Sadece sen yayın yaparsın. Topluluğu herkese açık ya da şifreli yapabilirsin.</p>
+    <div class="field"><label>Topluluk adı</label><input id="cm_name" placeholder="ör. Gece Vardiyası FM"></div>
     <div class="field"><label>Kısa açıklama</label><input id="cm_desc" placeholder="ör. Geç saat lo-fi ve indie"></div>
     <div class="field">
       <label>Kanal türü</label>
@@ -399,7 +411,7 @@
     <div class="left">
       <div class="onair off" id="onair"><span class="dot"></span> <span id="onairTxt">YAYIN KAPALI</span></div>
       <div class="title">
-        <h2 id="roomName">İstasyon</h2>
+        <h2 id="roomName">Topluluk</h2>
         <small id="roomNp">boşta</small>
       </div>
     </div>
@@ -416,7 +428,7 @@
       <div id="ytplayer"></div>
       <div class="player-cover" id="playerCover">
         <div class="eq paused" style="height:26px"><span style="height:8px"></span><span style="height:8px"></span><span style="height:8px"></span><span style="height:8px"></span></div>
-        <div class="small" id="coverTitle">Yayın henüz başlamadı</div>
+        <div class="big" id="coverTitle">Yayın henüz başlamadı</div>
         <p id="coverText">DJ bir şarkı açtığında burada göreceksin.</p>
         <button class="btn primary hide" id="tuneIn">🔊 Sesi aç ve dinle</button>
       </div>
@@ -432,6 +444,12 @@
       <button data-emoji="😮">😮</button>
     </div>
 
+    <!-- dinleyici istek çubuğu (sadece dinleyici) -->
+    <div class="req-bar hide" id="reqBar">
+      <input id="req_url" placeholder="🎵 Şarkı iste — YouTube linki yapıştır…" autocomplete="off">
+      <button class="btn" id="req_send">İstek gönder</button>
+    </div>
+
     <!-- DJ controls -->
     <div class="dj-bar hide" id="djBar">
       <div class="add">
@@ -444,6 +462,15 @@
     </div>
 
     <div class="lists">
+      <!-- istekler (sadece DJ) -->
+      <div class="card hide" id="reqCard">
+        <div class="card-h">
+          <h3>📨 İstekler <span class="req-badge hide" id="reqBadge">0</span></h3>
+          <span class="count" id="reqCount">bekleyen yok</span>
+        </div>
+        <ul class="queue" id="reqList"></ul>
+      </div>
+
       <!-- queue -->
       <div class="card">
         <div class="card-h">
@@ -527,7 +554,7 @@ const state = {
   playerReady:false,
   tunedIn:false,        // ses açıldı mı
   currentVideoId:null,
-  unsub:{ comms:null, room:null, queue:null, chat:null, presence:null, playlists:null, reactions:null },
+  unsub:{ comms:null, room:null, queue:null, chat:null, presence:null, playlists:null, reactions:null, requests:null },
   queue:[],
   playlists:[],
   heartbeat:null,
@@ -658,7 +685,7 @@ function renderNav(){
   const el=$('#navUser');
   if(state.user){
     el.innerHTML = `<span class="who">@<b>${esc(state.profile?.username||'dj')}</b></span>
-      <button class="btn primary sm" id="nvCreate">+ İstasyon</button>
+      <button class="btn primary sm" id="nvCreate">+ Topluluk</button>
       <button class="btn ghost sm" id="nvOut">Çıkış</button>`;
     $('#nvCreate').onclick=()=>openM('createModal');
     $('#nvOut').onclick=async ()=>{ await auth.signOut(); toast('Çıkış yapıldı'); };
@@ -685,7 +712,7 @@ $('#doCreate').onclick = async ()=>{
   const name=$('#cm_name').value.trim(), desc=$('#cm_desc').value.trim();
   const pw=$('#cm_pw').value.trim();
   const err=$('#cm_err'); err.textContent='';
-  if(name.length<2) return err.textContent='Bir istasyon adı gir.';
+  if(name.length<2) return err.textContent='Bir topluluk adı gir.';
   if(cmType==='private' && pw.length<3) return err.textContent='Özel kanal için en az 3 karakter şifre gir.';
   const btn=$('#doCreate'); btn.disabled=true; btn.textContent='Kuruluyor…';
   try{
@@ -701,7 +728,7 @@ $('#doCreate').onclick = async ()=>{
     });
     closeM('createModal');
     $('#cm_name').value=''; $('#cm_desc').value=''; $('#cm_pw').value='';
-    toast('İstasyon yayında!');
+    toast('Topluluk yayında!');
     enterRoom(ref.id);
   }catch(e){ err.textContent='Oluşturulamadı: '+(e.message||''); }
   finally{ btn.disabled=false; btn.textContent='Yayına başla'; }
@@ -715,9 +742,9 @@ function watchCommunities(){
   state.unsub.comms = db.collection('communities').orderBy('createdAt','desc').limit(60)
     .onSnapshot(snap=>{
       const grid=$('#commGrid'); const hint=$('#commHint');
-      hint.textContent = snap.size + ' istasyon';
+      hint.textContent = snap.size + ' topluluk';
       if(snap.empty){
-        grid.innerHTML = `<div class="empty"><h3>Henüz istasyon yok</h3><p>İlk yayını sen başlat — bir topluluk kur ve arkadaşlarını çağır.</p></div>`;
+        grid.innerHTML = `<div class="empty"><h3>Henüz topluluk yok</h3><p>İlk yayını sen başlat — bir topluluk kur ve arkadaşlarını çağır.</p></div>`;
         return;
       }
       grid.innerHTML='';
@@ -749,7 +776,7 @@ async function enterRoom(id){
   // temizle
   detachRoom();
   const snap = await db.collection('communities').doc(id).get();
-  if(!snap.exists){ toast('İstasyon bulunamadı'); history.replaceState(null,'',location.pathname); return; }
+  if(!snap.exists){ toast('Topluluk bulunamadı'); history.replaceState(null,'',location.pathname); return; }
   const c = snap.data();
   state.community = {id, ...c};
   state.isDJ = !!(state.user && state.user.uid===c.ownerUid);
@@ -762,7 +789,7 @@ async function enterRoom(id){
     state.displayName = '@'+(state.profile?.username||'dj');
     launchRoom();
   }else{
-    const saved = localStorage.getItem('frekans_name');
+    const saved = localStorage.getItem('istasyon_name');
     const priv = !!c.isPrivate;
     $('#jm_title').textContent = c.name;
     $('#jm_sub').textContent = priv ? '🔒 Bu özel bir kanal. İsmini ve DJ\'in verdiği şifreyi gir.' : 'Sohbette görünecek bir isim seç. Kayıt gerekmez.';
@@ -775,7 +802,7 @@ async function enterRoom(id){
       const nm=$('#jm_name').value.trim();
       if(nm.length<2){ $('#jm_err').textContent='Bir isim gir.'; return; }
       if(priv && $('#jm_pw').value.trim() !== (c.passcode||'')){ $('#jm_err').textContent='Şifre yanlış.'; return; }
-      localStorage.setItem('frekans_name',nm);
+      localStorage.setItem('istasyon_name',nm);
       state.displayName=nm;
       closeM('joinModal');
       launchRoom();
@@ -794,6 +821,8 @@ function launchRoom(){
   $('#pl_del').classList.toggle('hide', !state.isDJ);
   // dinleyicide "sesi aç" butonu; DJ'de gizli (kendi çalıyor)
   $('#tuneIn').classList.toggle('hide', state.isDJ);
+  $('#reqBar').classList.toggle('hide', state.isDJ);   // istek çubuğu sadece dinleyicide
+  $('#reqCard').classList.toggle('hide', !state.isDJ); // istek kartı sadece DJ'de
 
   ensurePlayer();
   watchRoom();
@@ -803,7 +832,7 @@ function launchRoom(){
   startPresence();
   watchReactions();               // canlı emoji tepkileri
   askNotifyPermission();          // odaya girince bildirim izni iste
-  if(state.isDJ) startDjSyncLoop(); // DJ pozisyonu düzenli yayınlasın
+  if(state.isDJ){ startDjSyncLoop(); watchRequests(); } // DJ: pozisyon + istekler
 }
 
 // DJ: her 3sn pozisyonu güncelle → geç katılanlar doğru saniyeye düşer
@@ -822,6 +851,7 @@ function detachRoom(){
   if(state.heartbeat){ clearInterval(state.heartbeat); state.heartbeat=null; }
   if(state.driftTimer){ clearInterval(state.driftTimer); state.driftTimer=null; }
   if(state.djSyncTimer){ clearInterval(state.djSyncTimer); state.djSyncTimer=null; }
+  state._reqInit = false;
 }
 
 $('#btnLeave').onclick = async ()=>{
@@ -896,7 +926,8 @@ function broadcastNow(isPlaying){
       thumb: meta.thumb||'',
       position: pos,
       isPlaying,
-      updatedAt: Date.now()
+      updatedAt: Date.now(),
+      queueId: state._curQueueId||null
     }
   });
 }
@@ -904,16 +935,15 @@ function broadcastNow(isPlaying){
 // DJ: sıradaki (çalınmamış) şarkıya geç
 async function playNext(){
   if(!state.isDJ) return;
-  // şu an çalanı "çalındı" işaretle
-  const cur = state.currentVideoId;
-  const curItem = state.queue.find(x=>x.videoId===cur && !x.played);
-  const pending = state.queue.filter(x=>!x.played);
-  const next = pending.find(x=>x.videoId!==cur) || (curItem?null:pending[0]);
-  if(curItem){
+  const curId = state._curQueueId;
+  const curItem = curId ? state.queue.find(x=>x.id===curId) : null;
+  // sıradaki = çalınmamış, şu an çalan olmayan ilk parça (order'a göre zaten sıralı)
+  const next = state.queue.find(x=>!x.played && x.id!==curId);
+  if(curItem && !curItem.played){
     try{ await db.collection('communities').doc(state.community.id).collection('queue').doc(curItem.id).update({played:true, playedAt:Date.now()}); }catch(e){}
   }
   if(!next){
-    state.currentVideoId=null; state._curMeta=null;
+    state.currentVideoId=null; state._curMeta=null; state._curQueueId=null;
     await db.collection('communities').doc(state.community.id).update({isLive:false, nowPlaying:null});
     try{ state.player.stopVideo(); }catch(e){}
     return;
@@ -934,7 +964,7 @@ function playVideo(videoId, meta, queueId){
 function watchRoom(){
   state.unsub.room = db.collection('communities').doc(state.community.id)
     .onSnapshot(doc=>{
-      if(!doc.exists){ toast('İstasyon kapandı'); $('#btnLeave').click(); return; }
+      if(!doc.exists){ toast('Topluluk kapandı'); $('#btnLeave').click(); return; }
       state.community = {id:doc.id, ...doc.data()};
       applyIncoming();
     });
@@ -1056,7 +1086,7 @@ async function addToQueue(videoId, meta){
   meta = meta || await fetchMeta(videoId);
   await db.collection('communities').doc(state.community.id).collection('queue').add({
     videoId, title:meta.title, thumb:meta.thumb, author:meta.author||'',
-    addedBy: state.displayName, order: Date.now()
+    addedBy: meta.addedBy || state.displayName, order: Date.now(), played:false
   });
   if(!state.community?.nowPlaying){ djUnmuteOnce(); setTimeout(playNext,300); }
 }
@@ -1133,10 +1163,14 @@ function watchQueue(){
       renderQueue();
     });
 }
+function currentQueueId(){
+  return state.community?.nowPlaying?.queueId || state._curQueueId || null;
+}
 function renderQueue(){
   const ul=$('#queueList'); const np=state.community?.nowPlaying;
-  const upcoming = state.queue.filter(q=>!q.played && q.videoId!==state.currentVideoId);
-  const played = state.queue.filter(q=>q.played);
+  const nowId = currentQueueId();
+  const upcoming = state.queue.filter(q=>!q.played && q.id!==nowId);
+  const played = state.queue.filter(q=>q.played && q.id!==nowId);
   $('#queueCount').textContent = upcoming.length+' sırada';
   let html='';
   if(np){
@@ -1151,10 +1185,13 @@ function renderQueue(){
     return;
   }
   upcoming.forEach((q,i)=>{
+    const up = i>0, down = i<upcoming.length-1;
     html += `<li>
       <img src="${esc(q.thumb||'')}" alt="">
       <div class="qmeta"><div class="t">${esc(q.title)}</div><div class="b">${i+1}. sırada · ${esc(q.addedBy||'')}</div></div>
       ${state.isDJ?`<div class="qact">
+        <button class="icon-btn" title="Yukarı" ${up?'':'disabled'} onclick="djMoveQueue('${q.id}',-1)">▲</button>
+        <button class="icon-btn" title="Aşağı" ${down?'':'disabled'} onclick="djMoveQueue('${q.id}',1)">▼</button>
         <button class="icon-btn play" title="Şimdi çal" onclick="djPlayFromQueue('${q.id}')">▶</button>
         <button class="icon-btn" title="Kaldır" onclick="djRemoveQueue('${q.id}')">✕</button>
       </div>`:''}
@@ -1167,7 +1204,7 @@ function renderQueue(){
         <img src="${esc(q.thumb||'')}" alt="">
         <div class="qmeta"><div class="t">${esc(q.title)}</div><div class="b">✓ çalındı · ${esc(q.addedBy||'')}</div></div>
         ${state.isDJ?`<div class="qact">
-          <button class="icon-btn play" title="Tekrar çal" onclick="djPlayFromQueue('${q.id}')">↻</button>
+          <button class="icon-btn play" title="Tekrar sıraya al" onclick="djRequeue('${q.id}')">↻</button>
           <button class="icon-btn" title="Sil" onclick="djRemoveQueue('${q.id}')">✕</button>
         </div>`:''}
       </li>`;
@@ -1175,17 +1212,104 @@ function renderQueue(){
   }
   ul.innerHTML=html;
 }
+
+// çalınmamış bir parçayı hemen çal
 window.djPlayFromQueue = async (qid)=>{
   const item = state.queue.find(x=>x.id===qid); if(!item) return;
   djUnmuteOnce();
-  // önceki çalanı çalındı işaretle, seçileni "çalınmadı"ya çek (tekrar çalınabilsin)
-  const prev = state.queue.find(x=>x.videoId===state.currentVideoId && !x.played);
-  if(prev){ try{ await db.collection('communities').doc(state.community.id).collection('queue').doc(prev.id).update({played:true,playedAt:Date.now()}); }catch(e){} }
-  try{ await db.collection('communities').doc(state.community.id).collection('queue').doc(qid).update({played:false}); }catch(e){}
+  const curId = state._curQueueId;
+  if(curId && curId!==qid){
+    const c = state.queue.find(x=>x.id===curId);
+    if(c && !c.played){ try{ await db.collection('communities').doc(state.community.id).collection('queue').doc(curId).update({played:true,playedAt:Date.now()}); }catch(e){} }
+  }
+  if(item.played){ try{ await db.collection('communities').doc(state.community.id).collection('queue').doc(qid).update({played:false}); }catch(e){} }
   playVideo(item.videoId,{title:item.title,thumb:item.thumb},qid);
 };
+// çalınmış bir parçayı sıranın SONUNA taze kopya olarak ekle (tekrar-ekleme hatası çözümü)
+window.djRequeue = async (qid)=>{
+  const item = state.queue.find(x=>x.id===qid); if(!item) return;
+  await db.collection('communities').doc(state.community.id).collection('queue').add({
+    videoId:item.videoId, title:item.title, thumb:item.thumb, author:item.author||'',
+    addedBy:item.addedBy||state.displayName, order:Date.now(), played:false
+  });
+  toast('Tekrar sıraya eklendi');
+};
 window.djRemoveQueue = (qid)=> db.collection('communities').doc(state.community.id).collection('queue').doc(qid).delete();
+// sırayı yukarı/aşağı taşı (komşuyla order takası)
+window.djMoveQueue = async (qid, dir)=>{
+  const nowId = currentQueueId();
+  const up = state.queue.filter(q=>!q.played && q.id!==nowId);
+  const i = up.findIndex(q=>q.id===qid);
+  const j = i + (dir<0?-1:1);
+  if(i<0 || j<0 || j>=up.length) return;
+  const a=up[i], b=up[j];
+  const col=db.collection('communities').doc(state.community.id).collection('queue');
+  const batch=db.batch();
+  batch.update(col.doc(a.id),{order:b.order});
+  batch.update(col.doc(b.id),{order:a.order});
+  try{ await batch.commit(); }catch(e){ toast('Taşınamadı'); }
+};
 window.playNext = playNext;
+
+/* ================================================================
+   10b) İSTEK SİSTEMİ  (dinleyici gönderir → DJ onaylar → sıraya)
+   ================================================================ */
+// dinleyici: istek gönder
+async function sendRequest(){
+  const raw=$('#req_url').value.trim();
+  const vid=parseVideoId(raw);
+  if(!vid){ toast('Geçerli bir YouTube linki yapıştır'); return; }
+  $('#req_url').value=''; toast('İstek gönderiliyor…');
+  const meta = await fetchMeta(vid);
+  await db.collection('communities').doc(state.community.id).collection('requests').add({
+    videoId:vid, title:meta.title, thumb:meta.thumb,
+    by: state.displayName, status:'pending', createdAt: FV.serverTimestamp(), order: Date.now()
+  });
+  toast('İstek gönderildi ✓ DJ onaylayınca sıraya girer');
+}
+$('#req_send').onclick = sendRequest;
+$('#req_url')?.addEventListener('keydown',e=>{ if(e.key==='Enter') sendRequest(); });
+
+// DJ: bekleyen istekleri izle
+function watchRequests(){
+  state.unsub.requests = db.collection('communities').doc(state.community.id).collection('requests')
+    .where('status','==','pending')
+    .onSnapshot(snap=>{
+      const list = snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.order||0)-(b.order||0));
+      renderRequests(list);
+      // yeni gelen istekte bildir
+      if(state._reqInit){
+        snap.docChanges().forEach(ch=>{ if(ch.type==='added'){ const r=ch.doc.data(); toast('🎵 Yeni istek: '+r.by); pingSound && pingSound(); } });
+      }
+      state._reqInit = true;
+    }, e=>{ /* sessiz geç */ });
+}
+function renderRequests(list){
+  const ul=$('#reqList'); const badge=$('#reqBadge'); const cnt=$('#reqCount');
+  cnt.textContent = list.length ? list.length+' bekliyor' : 'bekleyen yok';
+  badge.textContent = list.length; badge.classList.toggle('hide', list.length===0);
+  if(!list.length){ ul.innerHTML = `<li class="list-empty">Dinleyicilerden gelen istekler burada belirir.</li>`; return; }
+  ul.innerHTML = list.map(r=>`<li>
+    <img src="${esc(r.thumb||'')}" alt="">
+    <div class="qmeta"><div class="t">${esc(r.title)}</div><div class="b">🙋 ${esc(r.by||'')}</div></div>
+    <div class="qact">
+      <button class="icon-btn ok" title="Onayla, sıraya ekle" onclick="djApproveReq('${r.id}')">✓</button>
+      <button class="icon-btn no" title="Reddet" onclick="djRejectReq('${r.id}')">✕</button>
+    </div>
+  </li>`).join('');
+}
+window.djApproveReq = async (rid)=>{
+  const ref = db.collection('communities').doc(state.community.id).collection('requests').doc(rid);
+  const snap = await ref.get(); if(!snap.exists) return;
+  const r = snap.data();
+  await addToQueue(r.videoId, {title:r.title, thumb:r.thumb, addedBy:'istek: '+(r.by||'')});
+  await ref.delete();
+  toast('Sıraya eklendi ✓');
+};
+window.djRejectReq = async (rid)=>{
+  await db.collection('communities').doc(state.community.id).collection('requests').doc(rid).delete();
+  toast('İstek reddedildi');
+};
 
 /* ================================================================
    11) KAYITLI LİSTELER (PLAYLIST)
@@ -1276,9 +1400,9 @@ function notifyChat(name, text){
   if(document.visibilityState==='visible') { pingSound(); return; }
   if(!('Notification' in window) || Notification.permission!=='granted') return;
   try{
-    const n = new Notification(`${name} · ${state.community?.name||'FREKANS'}`, {
+    const n = new Notification(`${name} · ${state.community?.name||'İSTASYON'}`, {
       body: text,
-      tag: 'frekans-chat',        // üst üste yığılmasın
+      tag: 'istasyon-chat',        // üst üste yığılmasın
       renotify: true,
       icon: 'https://i.ytimg.com/vi/'+(state.currentVideoId||'')+'/default.jpg'
     });
